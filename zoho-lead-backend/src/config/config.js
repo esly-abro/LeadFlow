@@ -21,31 +21,7 @@ const config = {
     },
 
     // Logging
-    logLevel: process.env.LOG_LEVEL || 'info',
-
-    // Exotel configuration
-    exotel: {
-        enabled: process.env.EXOTEL_ENABLED === 'true',
-        accountSid: process.env.EXOTEL_ACCOUNT_SID,
-        apiKey: process.env.EXOTEL_API_KEY,
-        apiToken: process.env.EXOTEL_API_TOKEN,
-        subdomain: process.env.EXOTEL_SUBDOMAIN || 'api.exotel.com',
-        exophone: process.env.EXOTEL_EXOPHONE,
-        appId: process.env.EXOTEL_APP_ID || null,
-        callDelayMs: parseInt(process.env.EXOTEL_CALL_DELAY_MS || '60000', 10),
-        callType: process.env.EXOTEL_CALL_TYPE || 'trans',
-        maxRetries: parseInt(process.env.EXOTEL_MAX_RETRIES || '3', 10)
-    },
-
-    // Twilio configuration
-    twilio: {
-        enabled: process.env.TWILIO_ENABLED === 'true',
-        accountSid: process.env.TWILIO_ACCOUNT_SID,
-        authToken: process.env.TWILIO_AUTH_TOKEN,
-        phoneNumber: process.env.TWILIO_PHONE_NUMBER,
-        callDelayMs: parseInt(process.env.TWILIO_CALL_DELAY_MS || '60000', 10),
-        maxRetries: parseInt(process.env.TWILIO_MAX_RETRIES || '3', 10)
-    }
+    logLevel: process.env.LOG_LEVEL || 'info'
 };
 
 // Validate required environment variables

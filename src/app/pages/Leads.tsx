@@ -6,7 +6,7 @@ import { Card } from '../components/ui/card';
 import { Badge } from '../components/ui/badge';
 import {
   Plus, Upload, Filter, Search, Phone, Mail, Calendar,
-  MoreHorizontal, Layout, LayoutList, Table as TableIcon, Headphones, X
+  MoreHorizontal, Layout, LayoutList, Table as TableIcon, Headphones, X, Download
 } from 'lucide-react';
 import { Link } from 'react-router-dom';
 import {
@@ -24,6 +24,8 @@ import {
 } from '../components/ui/select';
 import { createLead } from '../../services/leads';
 import { Label } from '../components/ui/label';
+import ImportLeadsDialog from '../components/ImportLeadsDialog';
+import * as XLSX from 'xlsx';
 
 export default function Leads() {
   const { leads, loading, error, refreshLeads } = useData();
@@ -32,7 +34,9 @@ export default function Leads() {
   const [statusFilter, setStatusFilter] = useState('all');
   const [sourceFilter, setSourceFilter] = useState('all');
   const [showAddDialog, setShowAddDialog] = useState(false);
+  const [showImportDialog, setShowImportDialog] = useState(false);
   const [creating, setCreating] = useState(false);
+  const [exporting, setExporting] = useState(false);
   const [formData, setFormData] = useState({
     name: '',
     email: '',
@@ -57,6 +61,56 @@ export default function Leads() {
       case 'medium': return 'bg-yellow-100 text-yellow-700';
       case 'low': return 'bg-green-100 text-green-700';
       default: return 'bg-gray-100 text-gray-700';
+    }
+  };
+
+  const handleExportLeads = async () => {
+    try {
+      setExporting(true);
+      
+      // Prepare data for Excel
+      const exportData = leads.map(lead => ({
+        'Name': lead.name,
+        'Email': lead.email,
+        'Phone': lead.phone,
+        'Company': lead.company,
+        'Source': lead.source,
+        'Status': lead.status,
+        'Created At': lead.createdAt ? new Date(lead.createdAt).toLocaleDateString() : '',
+        'Last Action': lead.updatedAt ? new Date(lead.updatedAt).toLocaleDateString() : ''
+      }));
+
+      // Create workbook and worksheet
+      const ws = XLSX.utils.json_to_sheet(exportData);
+      const wb = XLSX.utils.book_new();
+      XLSX.utils.book_append_sheet(wb, ws, 'Leads');
+
+      // Auto-size columns
+      const colWidths = [
+        { wch: 25 }, // Name
+        { wch: 30 }, // Email
+        { wch: 15 }, // Phone
+        { wch: 20 }, // Company
+        { wch: 15 }, // Source
+        { wch: 12 }, // Status
+        { wch: 15 }, // Created At
+        { wch: 15 }  // Last Action
+      ];
+      ws['!cols'] = colWidths;
+
+      // Generate filename with date
+      const date = new Date().toISOString().split('T')[0];
+      const filename = `zoho_leads_export_${date}.xlsx`;
+
+      // Download file
+      XLSX.writeFile(wb, filename);
+      
+      alert(`Successfully exported ${leads.length} leads!`);
+    } catch (err) {
+      console.error('Failed to export leads:', err);
+      alert('Failed to export leads. Please try again.');
+    } finally {
+      setExporting(false);
     }
   };
 
@@ -113,7 +167,11 @@ export default function Leads() {
           <p className="text-gray-600">Manage and track all your leads in one place</p>
         </div>
         <div className="flex gap-2">
-          <Button variant="outline">
+          <Button variant="outline" onClick={handleExportLeads} disabled={exporting || leads.length === 0}>
+            <Download className="h-4 w-4 mr-2" />
+            {exporting ? 'Exporting...' : 'Export'}
+          </Button>
+          <Button variant="outline" onClick={() => setShowImportDialog(true)}>
             <Upload className="h-4 w-4 mr-2" />
             Import
           </Button>
@@ -147,10 +205,10 @@ export default function Leads() {
               <SelectContent>
                 <SelectItem value="all">All Statuses</SelectItem>
                 <SelectItem value="New">New</SelectItem>
-                <SelectItem value="Contacted">Contacted</SelectItem>
-                <SelectItem value="Qualified">Qualified</SelectItem>
-                <SelectItem value="Proposal Sent">Proposal Sent</SelectItem>
-                <SelectItem value="Negotiation">Negotiation</SelectItem>
+                <SelectItem value="Call Attended">Call Attended</SelectItem>
+                <SelectItem value="No Response">No Response</SelectItem>
+                <SelectItem value="Not Interested">Not Interested</SelectItem>
+                <SelectItem value="Site Visit Booked">Site Visit Booked</SelectItem>
               </SelectContent>
             </Select>
 
@@ -347,6 +405,13 @@ export default function Leads() {
           </div>
         </div>
       )}
+
+      {/* Import Leads Dialog */}
+      <ImportLeadsDialog
+        open={showImportDialog}
+        onClose={() => setShowImportDialog(false)}
+        onImportComplete={refreshLeads}
+      />
     </div>
   );
 }

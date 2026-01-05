@@ -16,9 +16,10 @@ interface ScheduleSiteVisitDialogProps {
     open: boolean;
     onOpenChange: (open: boolean) => void;
     lead: Lead;
+    onConfirm?: (details: { visitDate: string; timeSlot: string; agent: string; instructions: string }) => void;
 }
 
-export default function ScheduleSiteVisitDialog({ open, onOpenChange, lead }: ScheduleSiteVisitDialogProps) {
+export default function ScheduleSiteVisitDialog({ open, onOpenChange, lead, onConfirm }: ScheduleSiteVisitDialogProps) {
     const [selectedDate, setSelectedDate] = useState<number | null>(null);
     const [visitDate, setVisitDate] = useState('');
     const [timeSlot, setTimeSlot] = useState('');
@@ -59,6 +60,9 @@ export default function ScheduleSiteVisitDialog({ open, onOpenChange, lead }: Sc
     const handleConfirm = () => {
         // Handle confirmation logic here
         console.log({ visitDate, timeSlot, agent, instructions });
+        if (onConfirm) {
+            onConfirm({ visitDate, timeSlot, agent, instructions });
+        }
         onOpenChange(false);
     };
 
