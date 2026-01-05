@@ -10,6 +10,8 @@ const logger = require('./utils/logger');
 const requestLogger = require('./middleware/logger');
 const errorHandler = require('./middleware/errorHandler');
 const leadsRoutes = require('./routes/leads');
+const exotelRoutes = require('./routes/exotel');
+const twilioRoutes = require('./routes/twilio');
 
 // Create Express app
 const app = express();
@@ -50,6 +52,8 @@ app.get('/', (req, res) => {
 
 // API Routes
 app.use('/leads', leadsRoutes);
+app.use('/exotel', exotelRoutes);
+app.use('/twilio', twilioRoutes);
 
 // 404 handler
 app.use((req, res) => {
@@ -75,18 +79,31 @@ app.listen(PORT, () => {
     logger.info(`  POST   http://localhost:${PORT}/leads`);
     logger.info(`  GET    http://localhost:${PORT}/leads/sources`);
     logger.info(`  GET    http://localhost:${PORT}/health`);
+    logger.info(`  POST   http://localhost:${PORT}/exotel/status-callback`);
+    logger.info(`  GET    http://localhost:${PORT}/exotel/stats`);
     logger.info('');
     logger.info('Ready to accept lead ingestion requests! 🎉');
+
+    if (config.exotel.enabled) {
+        logger.info('📞 Exotel IVR calling is ENABLED');
+        logger.info(`   Call delay: ${config.exotel.callDelayMs}ms (${config.exotel.callDelayMs / 1000}s)`);
+    } else {
+        logger.info('📞 Exotel IVR calling is DISABLED');
+    }
 });
 
 // Graceful shutdown
-process.on('SIGTERM', () => {
+process.on('SIGTERM', async () => {
     logger.info('SIGTERM received, shutting down gracefully...');
+    const callScheduler = require('./services/callScheduler');
+    await callScheduler.shutdown();
     process.exit(0);
 });
 
-process.on('SIGINT', () => {
+process.on('SIGINT', async () => {
     logger.info('SIGINT received, shutting down gracefully...');
+    const callScheduler = require('./services/callScheduler');
+    await callScheduler.shutdown();
     process.exit(0);
 });
 
