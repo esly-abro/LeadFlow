@@ -1,0 +1,67 @@
+/**
+ * Server Entry Point
+ * Starts the Fastify application
+ */
+
+const buildApp = require('./app');
+const config = require('./config/env');
+
+async function start() {
+    let app;
+
+    try {
+        // Build Fastify app
+        app = await buildApp();
+
+        // Start server
+        await app.listen({
+            port: config.port,
+            host: '0.0.0.0'
+        });
+
+        console.log('');
+        console.log('🚀 Application Backend Started!');
+        console.log('================================');
+        console.log(`Environment: ${config.nodeEnv}`);
+        console.log(`Port: ${config.port}`);
+        console.log(`URL: http://localhost:${config.port}`);
+        console.log('');
+        console.log('Available Endpoints:');
+        console.log('  Public:');
+        console.log(`    POST   http://localhost:${config.port}/auth/login`);
+        console.log(`    POST   http://localhost:${config.port}/auth/refresh`);
+        console.log(`    POST   http://localhost:${config.port}/auth/logout`);
+        console.log('  Protected (requires JWT):');
+        console.log(`    GET    http://localhost:${config.port}/api/leads`);
+        console.log(`    GET    http://localhost:${config.port}/api/leads/:id`);
+        console.log(`    POST   http://localhost:${config.port}/api/leads`);
+        console.log(`    GET    http://localhost:${config.port}/api/metrics/overview`);
+        console.log('  Utility:');
+        console.log(`    GET    http://localhost:${config.port}/health`);
+        console.log('');
+        console.log('Ready to accept requests! 🎉');
+        console.log('');
+
+    } catch (error) {
+        console.error('Failed to start server:', error);
+        process.exit(1);
+    }
+
+    // Graceful shutdown
+    const shutdown = async (signal) => {
+        console.log(`\n${signal} received, shutting down gracefully...`);
+
+        if (app) {
+            await app.close();
+        }
+
+        console.log('Server closed.');
+        process.exit(0);
+    };
+
+    process.on('SIGTERM', () => shutdown('SIGTERM'));
+    process.on('SIGINT', () => shutdown('SIGINT'));
+}
+
+// Start server
+start();
