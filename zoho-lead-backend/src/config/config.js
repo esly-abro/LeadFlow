@@ -20,6 +20,31 @@ const config = {
         scope: process.env.ZOHO_CRM_SCOPE || 'ZohoCRM.modules.ALL'
     },
 
+    // Exotel configuration
+    exotel: {
+        enabled: process.env.EXOTEL_ENABLED === 'true',
+        accountSid: process.env.EXOTEL_ACCOUNT_SID,
+        apiKey: process.env.EXOTEL_API_KEY,
+        apiToken: process.env.EXOTEL_API_TOKEN,
+        subdomain: process.env.EXOTEL_SUBDOMAIN || 'api.exotel.com',
+        exophone: process.env.EXOTEL_EXOPHONE,
+        appId: process.env.EXOTEL_APP_ID,
+        callDelayMs: parseInt(process.env.EXOTEL_CALL_DELAY_MS) || 60000,
+        callType: process.env.EXOTEL_CALL_TYPE || 'trans',
+        maxRetries: parseInt(process.env.EXOTEL_MAX_RETRIES) || 3
+    },
+
+    // Twilio configuration
+    twilio: {
+        enabled: process.env.TWILIO_ENABLED === 'true',
+        accountSid: process.env.TWILIO_ACCOUNT_SID,
+        authToken: process.env.TWILIO_AUTH_TOKEN,
+        phoneNumber: process.env.TWILIO_PHONE_NUMBER,
+        callDelayMs: parseInt(process.env.TWILIO_CALL_DELAY_MS) || 60000,
+        maxRetries: parseInt(process.env.TWILIO_MAX_RETRIES) || 3,
+        baseUrl: process.env.BASE_URL
+    },
+
     // Logging
     logLevel: process.env.LOG_LEVEL || 'info'
 };

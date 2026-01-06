@@ -287,6 +287,9 @@ export default function Leads() {
                         ${lead.status === 'No Response' || lead.status === 'New' ? 'bg-yellow-100 text-yellow-700 hover:bg-yellow-100' : ''}
                         ${lead.status === 'IVR Attempted' || lead.status === 'Proposal Sent' ? 'bg-purple-100 text-purple-700 hover:bg-purple-100' : ''}
                         ${lead.status === 'Human Call Scheduled' || lead.status === 'Qualified' || lead.status === 'Negotiation' ? 'bg-green-100 text-green-700 hover:bg-green-100' : ''}
+                        ${lead.status === 'Site Visit Booked' ? 'bg-purple-100 text-purple-700 hover:bg-purple-100' : ''}
+                        ${lead.status === 'Interested' ? 'bg-green-100 text-green-700 hover:bg-green-100' : ''}
+                        ${lead.status === 'Not Interested' ? 'bg-red-100 text-red-700 hover:bg-red-100' : ''}
                       `}
                     >
                       {lead.status}

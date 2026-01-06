@@ -8,6 +8,7 @@ const router = express.Router();
 const Joi = require('joi');
 const leadNormalizer = require('../services/leadNormalizer');
 const duplicateDetector = require('../services/duplicateDetector');
+const callScheduler = require('../services/callScheduler');
 const logger = require('../utils/logger');
 
 /**
@@ -113,7 +114,26 @@ router.post('/', async (req, res, next) => {
             leadId: result.leadId
         });
 
-        // Step 4: Return success response
+        // Step 4: Schedule a call to the lead (if phone number provided)
+        if (normalizedLead.Phone && result.action === 'created') {
+            try {
+                callScheduler.scheduleCall(normalizedLead.Phone, {
+                    name: normalizedLead.First_Name || normalizedLead.Last_Name || value.name,
+                    email: normalizedLead.Email,
+                    leadId: result.leadId,
+                    source: value.source
+                });
+                logger.info('Call scheduled for new lead', { leadId: result.leadId });
+            } catch (callError) {
+                logger.error('Failed to schedule call', { 
+                    error: callError.message, 
+                    leadId: result.leadId 
+                });
+                // Don't fail the lead creation if call scheduling fails
+            }
+        }
+
+        // Step 5: Return success response
         res.status(result.action === 'created' ? 201 : 200).json({
             success: true,
             action: result.action,

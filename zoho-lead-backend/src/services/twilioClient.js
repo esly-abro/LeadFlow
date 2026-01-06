@@ -25,7 +25,7 @@ class TwilioClient {
     /**
      * Make a call to a lead
      * @param {string} phoneNumber - Lead's phone number
-     * @param {object} options - Additional call options
+     * @param {object} options - Additional call options (includes leadId, leadName)
      * @returns {Promise<object>} Call response from Twilio
      */
     async makeCall(phoneNumber, options = {}) {
@@ -44,19 +44,18 @@ class TwilioClient {
 
         logger.info('Initiating Twilio call', {
             to: this.maskPhoneNumber(formattedTo),
-            from: formattedFrom
+            from: formattedFrom,
+            leadId: options.leadId
         });
 
         try {
-            // Prepare call parameters
+            // Prepare call parameters - pass leadId in TwiML
             const callParams = {
                 to: formattedTo,
                 from: formattedFrom,
-                // Use inline TwiML instead of webhook URL (for local testing)
-                twiml: this.getDefaultTwiML(),
-                statusCallback: options.statusCallback,
-                statusCallbackEvent: ['completed', 'failed', 'busy', 'no-answer'],
-                statusCallbackMethod: 'POST',
+                // Use inline TwiML with leadId embedded
+                twiml: this.getDefaultTwiML(options.leadId, options.leadName),
+                // Note: statusCallbackEvent removed - causes warning with inline TwiML
                 timeout: options.timeout || 60, // Ring timeout in seconds
                 record: options.record || false
             };
@@ -127,16 +126,19 @@ class TwilioClient {
 
     /**
      * Get default TwiML for IVR (inline)
-     * Returns TwiML XML string for JK Real Estate IVR
+     * Returns TwiML XML string for JK Homes IVR
+     * @param {string} leadId - Zoho Lead ID to pass to webhook
+     * @param {string} leadName - Lead name for personalization
      */
-    getDefaultTwiML() {
-        const baseUrl = process.env.BASE_URL || 'http://localhost:3000';
-        const webhookUrl = `${baseUrl}/ivr-response`;  // Fixed: removed /twilio prefix
+    getDefaultTwiML(leadId, leadName) {
+        // Use Twilio Function URL with leadId as query parameter
+        const twilioFunctionUrl = process.env.TWILIO_FUNCTION_URL || 'https://jk-9813.twil.io/ivr-response';
+        const webhookUrl = `${twilioFunctionUrl}?leadId=${encodeURIComponent(leadId || '')}`;
 
         return `<?xml version="1.0" encoding="UTF-8"?>
 <Response>
     <Say voice="alice" language="en-IN">
-        Hello, this is an automated call from J K Real Estate. 
+        Hello, this is an automated call from J K Homes. 
         We noticed you showed interest in properties.
     </Say>
     <Pause length="1"/>
@@ -147,8 +149,8 @@ class TwilioClient {
     <Pause length="1"/>
     <Gather action="${webhookUrl}" numDigits="1" timeout="10" method="POST">
         <Say voice="alice" language="en-IN">
-            Would you like to schedule a site visit? 
-            Press 1 to schedule a visit with our team. 
+            Would you like to know more? 
+            Press 1 if you are interested. 
             Press 2 to receive more information via WhatsApp. 
             Press 3 if you are not interested at this time.
         </Say>

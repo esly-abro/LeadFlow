@@ -1,5 +1,6 @@
 import { useState } from 'react';
-import { Outlet, Link, useLocation } from 'react-router-dom';
+import { Outlet, Link, useLocation, useNavigate } from 'react-router-dom';
+import { logout } from '../../services/auth';
 import {
   LayoutDashboard,
   Users,
@@ -29,9 +30,20 @@ import {
   DropdownMenuTrigger,
 } from './ui/dropdown-menu';
 
-export default function MainLayout() {
+interface MainLayoutProps {
+  onLogout?: () => void;
+}
+
+export default function MainLayout({ onLogout }: MainLayoutProps) {
   const location = useLocation();
+  const navigate = useNavigate();
   const [sidebarOpen, setSidebarOpen] = useState(false);
+
+  const handleLogout = async () => {
+    await logout();
+    onLogout?.();
+    navigate('/login');
+  };
 
   const navigation = [
     { name: 'Dashboard', href: '/dashboard', icon: LayoutDashboard },
@@ -61,7 +73,7 @@ export default function MainLayout() {
             
             <div className="flex items-center gap-2">
               <Building2 className="h-6 w-6 text-blue-600" />
-              <span className="font-bold text-lg hidden sm:block">LeadFlow</span>
+              <span className="font-bold text-lg hidden sm:block">JK Homes</span>
             </div>
 
             <DropdownMenu>
@@ -136,7 +148,7 @@ export default function MainLayout() {
               <DropdownMenuContent align="end">
                 <DropdownMenuItem>Profile</DropdownMenuItem>
                 <DropdownMenuItem>Settings</DropdownMenuItem>
-                <DropdownMenuItem>Logout</DropdownMenuItem>
+                <DropdownMenuItem onClick={handleLogout}>Logout</DropdownMenuItem>
               </DropdownMenuContent>
             </DropdownMenu>
           </div>

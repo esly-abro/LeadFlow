@@ -7,6 +7,7 @@ const express = require('express');
 const router = express.Router();
 const logger = require('../utils/logger');
 const VoiceResponse = require('twilio').twiml.VoiceResponse;
+const zohoClient = require('../services/zohoClient');
 
 /**
  * GET/POST /twilio/ivr-greeting
@@ -64,7 +65,7 @@ router.all('/ivr-greeting', (req, res) => {
  * POST /twilio/ivr-response
  * Handle user button press responses
  */
-router.post('/ivr-response', (req, res) => {
+router.post('/ivr-response', async (req, res) => {
     const digit = req.body.Digits;
     const callSid = req.body.CallSid;
     const from = req.body.From;
@@ -79,22 +80,33 @@ router.post('/ivr-response', (req, res) => {
 
     switch (digit) {
         case '1':
-            // Schedule site visit
-            logger.info('Lead wants to schedule site visit', { callSid, from });
+            // Lead is interested - update status in Zoho
+            logger.info('Lead is interested - pressing 1', { callSid, from });
+
+            // Update lead status in Zoho CRM
+            try {
+                // Extract phone number (remove +91 or country code)
+                const phoneNumber = from.replace(/^\+91/, '').replace(/^\+/, '');
+                const lead = await zohoClient.searchLeadsByPhone(phoneNumber);
+                if (lead) {
+                    await zohoClient.updateLead(lead.id, {
+                        Lead_Status: 'Interested'
+                    });
+                    logger.info('Lead status updated to Interested in Zoho', { leadId: lead.id, phone: phoneNumber });
+                } else {
+                    logger.warn('Lead not found in Zoho for phone', { phone: phoneNumber });
+                }
+            } catch (updateError) {
+                logger.error('Failed to update lead status in Zoho', {
+                    error: updateError.message,
+                    from: from
+                });
+            }
 
             twiml.say({
                 voice: 'alice',
                 language: 'en-IN'
-            }, 'Great! We will connect you to our sales team now.');
-
-            // Here you can dial your sales team number
-            // twiml.dial('+91XXXXXXXXXX');
-
-            // For now, just say we'll call back
-            twiml.say({
-                voice: 'alice',
-                language: 'en-IN'
-            }, 'Our team will call you shortly to schedule your site visit. Thank you!');
+            }, 'Thank you for your interest! Our team will contact you shortly to assist you further.');
 
             twiml.hangup();
             break;

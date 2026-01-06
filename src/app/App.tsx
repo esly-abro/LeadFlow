@@ -47,7 +47,7 @@ export default function App() {
           <Route path="/" element={
             !isAuthenticated ? <Navigate to="/login" /> :
               !hasCompletedOnboarding ? <Navigate to="/onboarding" /> :
-                <MainLayout />
+                <MainLayout onLogout={() => setUser(null)} />
           }>
             <Route index element={<Navigate to="/dashboard" />} />
             <Route path="dashboard" element={<Dashboard />} />

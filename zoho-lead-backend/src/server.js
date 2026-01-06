@@ -10,6 +10,8 @@ const logger = require('./utils/logger');
 const requestLogger = require('./middleware/logger');
 const errorHandler = require('./middleware/errorHandler');
 const leadsRoutes = require('./routes/leads');
+const exotelRoutes = require('./routes/exotel');
+const twilioRoutes = require('./routes/twilio');
 
 // Create Express app
 const app = express();
@@ -50,6 +52,8 @@ app.get('/', (req, res) => {
 
 // API Routes
 app.use('/leads', leadsRoutes);
+app.use('/exotel', exotelRoutes);
+app.use('/twilio', twilioRoutes);
 
 // 404 handler
 app.use((req, res) => {
@@ -70,10 +74,16 @@ app.listen(PORT, () => {
     logger.info(`🚀 Server started on port ${PORT}`);
     logger.info(`Environment: ${config.nodeEnv}`);
     logger.info(`Zoho API Domain: ${config.zoho.apiDomain}`);
+    logger.info(`Exotel Enabled: ${config.exotel?.enabled || false}`);
+    logger.info(`Twilio Enabled: ${config.twilio?.enabled || false}`);
     logger.info('');
     logger.info('Available endpoints:');
     logger.info(`  POST   http://localhost:${PORT}/leads`);
     logger.info(`  GET    http://localhost:${PORT}/leads/sources`);
+    logger.info(`  POST   http://localhost:${PORT}/exotel/ivr-response`);
+    logger.info(`  POST   http://localhost:${PORT}/exotel/status-callback`);
+    logger.info(`  POST   http://localhost:${PORT}/twilio/ivr-greeting`);
+    logger.info(`  POST   http://localhost:${PORT}/twilio/ivr-response`);
     logger.info(`  GET    http://localhost:${PORT}/health`);
     logger.info('');
     logger.info('Ready to accept lead ingestion requests! 🎉');

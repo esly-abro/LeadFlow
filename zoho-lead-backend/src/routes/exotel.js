@@ -6,6 +6,7 @@
 const express = require('express');
 const router = express.Router();
 const logger = require('../utils/logger');
+const zohoClient = require('../services/zohoClient');
 
 /**
  * POST /exotel/status-callback
@@ -99,29 +100,47 @@ router.post('/ivr-response', async (req, res) => {
         // Handle different responses
         switch (Digits) {
             case '1':
-                // User wants to schedule a site visit
-                logger.info('Lead wants to schedule site visit', {
+                // User is interested - update status in Zoho CRM
+                logger.info('Lead is interested - pressing 1', {
                     callSid: CallSid,
                     from: From,
                     customField: CustomField
                 });
 
-                // TODO: Trigger actions:
-                // 1. Update lead in Zoho CRM with status "Site Visit Requested"
-                // 2. Send notification to sales team
-                // 3. Create task in CRM for follow-up
-                // 4. Send confirmation WhatsApp/SMS to lead
+                // Update lead status in Zoho CRM to "Interested"
+                try {
+                    // CustomField should contain the leadId
+                    const leadId = CustomField;
+                    if (leadId) {
+                        await zohoClient.updateLead(leadId, {
+                            Lead_Status: 'Interested'
+                        });
+                        logger.info('Lead status updated to Interested in Zoho', { leadId });
+                    } else {
+                        // Search by phone number if no leadId in CustomField
+                        const phoneNumber = From.replace(/^0/, '');
+                        const lead = await zohoClient.searchLeadsByPhone(phoneNumber);
+                        if (lead) {
+                            await zohoClient.updateLead(lead.id, {
+                                Lead_Status: 'Interested'
+                            });
+                            logger.info('Lead status updated to Interested in Zoho', { leadId: lead.id });
+                        }
+                    }
+                } catch (updateError) {
+                    logger.error('Failed to update lead status in Zoho', {
+                        error: updateError.message,
+                        from: From
+                    });
+                }
 
-                // For now, transfer to sales team
                 res.set('Content-Type', 'text/xml');
                 res.send(`<?xml version="1.0" encoding="UTF-8"?>
 <Response>
     <Say voice="woman" language="en">
-        Great! We will connect you to our sales team now.
+        Thank you for your interest! Our team will contact you shortly to assist you further.
     </Say>
-    <Dial>
-        <Number>YOUR_SALES_TEAM_NUMBER</Number>
-    </Dial>
+    <Hangup/>
 </Response>`);
                 break;
 

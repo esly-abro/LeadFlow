@@ -104,16 +104,18 @@ class CallScheduler {
         });
 
         try {
-            // Prepare Exotel options
-            const exotelOptions = {
+            // Prepare call options with lead info
+            const callOptions = {
                 customField: callId,
                 statusCallback: options.statusCallback,
+                leadId: leadData.leadId,  // Pass leadId for Twilio Function
+                leadName: leadData.name,
                 ...options
             };
 
             // Make the call using the active provider
             const client = this.provider === 'twilio' ? twilioClient : exotelClient;
-            const result = await client.makeCall(phoneNumber, exotelOptions);
+            const result = await client.makeCall(phoneNumber, callOptions);
 
             if (result.success) {
                 logger.info('Call initiated successfully', {
