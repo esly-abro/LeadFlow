@@ -57,3 +57,6 @@ zoho-lead-backend/.env
 
 # Cache
 .cache/
+
+# TypeScript output
+tsc_output*.txt
