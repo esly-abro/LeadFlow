@@ -1,0 +1,62 @@
+# Dependencies
+node_modules/
+*/node_modules/
+.pnp
+.pnp.js
+package-lock.json
+yarn.lock
+pnpm-lock.yaml
+
+# Testing
+coverage/
+
+# Production
+dist/
+build/
+out/
+.vite/
+
+# Misc
+.DS_Store
+Thumbs.db
+
+# Environment variables
+.env
+.env.local
+.env.*.local
+.env.development
+.env.development.local
+.env.test
+.env.test.local
+.env.production
+.env.production.local
+**/.env
+**/src/.env
+app-backend/.env
+zoho-lead-backend/.env
+
+# Logs
+logs/
+*.log
+npm-debug.log*
+yarn-debug.log*
+yarn-error.log*
+
+# IDE
+.vscode/
+.idea/
+*.swp
+*.swo
+*~
+
+# Backend
+app-backend/node_modules/
+app-backend/.env
+zoho-lead-backend/node_modules/
+zoho-lead-backend/.env
+
+# Cache
+.cache/
+
+# TypeScript output
+tsc_output*.txt
