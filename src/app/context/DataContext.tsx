@@ -25,7 +25,7 @@ export interface Lead {
 
 export interface Activity {
   id: string;
-  type: 'call' | 'email' | 'note' | 'meeting' | 'whatsapp';
+  type: 'call' | 'email' | 'note' | 'meeting' | 'whatsapp' | 'status' | 'site_visit';
   leadId?: string;
   description: string;
   timestamp: string;

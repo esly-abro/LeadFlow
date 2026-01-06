@@ -16,17 +16,16 @@ export function useTwilioCall(options: UseTwilioCallOptions = {}) {
   const [callDuration, setCallDuration] = useState(0);
   const [error, setError] = useState<string | null>(null);
   const activeCallRef = useRef<Call | null>(null);
-  const timerRef = useRef<NodeJS.Timeout | null>(null);
+  const timerRef = useRef<ReturnType<typeof setInterval> | null>(null);
 
   // Initialize Twilio Device
   const initializeDevice = useCallback(async () => {
     try {
       setError(null);
       const { token } = await getAccessToken();
-      
+
       const newDevice = new Device(token, {
         codecPreferences: [Call.Codec.PCMU, Call.Codec.Opus],
-        enableRingingState: true,
       });
 
       newDevice.on('registered', () => {
@@ -131,12 +130,12 @@ export function useTwilioCall(options: UseTwilioCallOptions = {}) {
     setIsConnecting(false);
     setIsOnCall(false);
     activeCallRef.current = null;
-    
+
     if (timerRef.current) {
       clearInterval(timerRef.current);
       timerRef.current = null;
     }
-    
+
     options.onCallEnded?.();
   }, [options]);
 

@@ -74,7 +74,11 @@ export default function Dashboard() {
   const todaysActivities = activities.filter(activity => {
     const activityDate = new Date(activity.timestamp);
     const today = new Date();
-    return activityDate.toDateString() === today.toDateString();
+    const isToday = activityDate.toDateString() === today.toDateString();
+    const isStatusUpdate = activity.description.startsWith('Status Updated') || activity.type === 'note' || activity.type === 'status'; // generic/status types
+    const isRelevant = activity.type === 'meeting' || activity.description.toLowerCase().includes('site visit');
+
+    return isToday && !isStatusUpdate && isRelevant;
   });
 
   return (
