@@ -378,7 +378,7 @@ export default function LeadDetail() {
                     if (callNotes.trim()) {
                       // Save notes to localStorage
                       localStorage.setItem(`lead_notes_${id}`, callNotes);
-                      addLeadActivity(`Notes saved: "${callNotes.substring(0, 50)}${callNotes.length > 50 ? '...' : ''}"`, 'note', 'bg-gray-500');
+                      addLeadActivity('note', `Notes saved: "${callNotes.substring(0, 50)}${callNotes.length > 50 ? '...' : ''}"`, 'bg-gray-500');
                       setNotesSaved(true);
                       setTimeout(() => setNotesSaved(false), 3000);
                     }

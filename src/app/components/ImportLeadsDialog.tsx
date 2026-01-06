@@ -3,6 +3,7 @@ import * as XLSX from 'xlsx';
 import { Button } from './ui/button';
 import { Label } from './ui/label';
 import { Upload, FileSpreadsheet, X, CheckCircle, AlertCircle, Download } from 'lucide-react';
+import api from '../../services/api';
 
 interface ImportLeadsDialogProps {
   open: boolean;
@@ -92,35 +93,20 @@ export default function ImportLeadsDialog({ open, onClose, onImportComplete }: I
     setImporting(true);
     const result: ImportResult = { success: 0, failed: 0, errors: [] };
 
-    const token = localStorage.getItem('accessToken');
-
     for (const lead of parsedLeads) {
       try {
-        const response = await fetch('http://localhost:4000/api/leads', {
-          method: 'POST',
-          headers: {
-            'Content-Type': 'application/json',
-            'Authorization': `Bearer ${token}`
-          },
-          body: JSON.stringify({
-            name: lead.name,
-            email: lead.email,
-            phone: lead.phone,
-            company: lead.company || '',
-            source: lead.source || 'Excel Import'
-          })
+        await api.post('/api/leads', {
+          name: lead.name,
+          email: lead.email,
+          phone: lead.phone,
+          company: lead.company || '',
+          source: lead.source || 'Excel Import'
         });
-
-        if (response.ok) {
-          result.success++;
-        } else {
-          result.failed++;
-          const errorData = await response.json();
-          result.errors.push(`${lead.name}: ${errorData.error || 'Unknown error'}`);
-        }
-      } catch (error) {
+        result.success++;
+      } catch (error: any) {
         result.failed++;
-        result.errors.push(`${lead.name}: Network error`);
+        const errorMessage = error.response?.data?.error || error.message || 'Unknown error';
+        result.errors.push(`${lead.name}: ${errorMessage}`);
       }
     }
 
