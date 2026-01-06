@@ -1,0 +1,46 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<Response>
+    <!-- Greet the caller with personalized message -->
+    <Say voice="woman" language="en">
+        Hello, this is an automated call from J K Real Estate.
+    </Say>
+    
+    <Pause length="1"/>
+    
+    <Say voice="woman" language="en">
+        We noticed you showed interest in properties. We have some exciting options that match your requirements.
+    </Say>
+    
+    <Pause length="1"/>
+    
+    <Say voice="woman" language="en">
+        Our properties feature modern amenities, prime locations, and competitive pricing.
+    </Say>
+    
+    <Pause length="1"/>
+    
+    <!-- Present menu options -->
+    <Say voice="woman" language="en">
+        Would you like to schedule a site visit?
+    </Say>
+    
+    <Pause length="1"/>
+    
+    <Gather numDigits="1" timeout="10" finishOnKey="#">
+        <Say voice="woman" language="en">
+            Press 1 to schedule a visit with our team.
+            Press 2 to receive more information via WhatsApp.
+            Press 3 if you're not interested at this time.
+        </Say>
+    </Gather>
+    
+    <!-- Handle Gather response -->
+    <!-- Note: You'll need to configure response handling in Exotel dashboard -->
+    
+    <!-- Fallback if no input -->
+    <Say voice="woman" language="en">
+        We didn't receive your selection. Our team will call you back shortly. Thank you.
+    </Say>
+    
+    <Hangup/>
+</Response>
