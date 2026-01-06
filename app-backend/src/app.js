@@ -104,6 +104,9 @@ async function buildApp() {
     app.register(async function (protectedApp) {
         // Apply auth middleware to all routes in this scope
         protectedApp.addHook('onRequest', requireAuth);
+        
+        // Add auth decorator for nested routes
+        protectedApp.decorate('auth', requireAuth);
 
         // Leads routes
         protectedApp.get('/api/leads', leadsController.getLeads);
@@ -112,6 +115,66 @@ async function buildApp() {
 
         // Metrics routes
         protectedApp.get('/api/metrics/overview', metricsController.getOverview);
+        
+        // Twilio routes (protected)
+        protectedApp.post('/api/twilio/call', async (request, reply) => {
+          const twilioService = require('./twilio/twilio.service');
+          const { phoneNumber, leadId, leadName } = request.body;
+          if (!phoneNumber) {
+            return reply.status(400).send({ error: 'Phone number is required' });
+          }
+          const result = await twilioService.makeCall(phoneNumber);
+          if (result.success) {
+            console.log(`Call initiated to ${phoneNumber} for lead ${leadName || leadId}`);
+          }
+          return reply.send(result);
+        });
+        
+        protectedApp.get('/api/twilio/call/:callSid', async (request, reply) => {
+          const twilioService = require('./twilio/twilio.service');
+          const { callSid } = request.params;
+          const result = await twilioService.getCallStatus(callSid);
+          return reply.send(result);
+        });
+        
+        protectedApp.get('/api/twilio/calls', async (request, reply) => {
+          const twilioService = require('./twilio/twilio.service');
+          const { limit } = request.query;
+          const result = await twilioService.getCallHistory(limit ? parseInt(limit) : 20);
+          return reply.send(result);
+        });
+        
+        // Get access token for browser calling
+        protectedApp.get('/api/twilio/token', async (request, reply) => {
+          const twilioService = require('./twilio/twilio.service');
+          const identity = request.user?.email || 'agent';
+          const token = twilioService.generateAccessToken(identity);
+          return reply.send({ token, identity });
+        });
+    });
+
+    // Twilio voice webhook (no auth - called by Twilio)
+    app.post('/twilio/voice', async (request, reply) => {
+      const toNumber = request.body.To || request.body.to;
+      let twiml;
+      
+      // Check if it's a phone number or client
+      if (toNumber && toNumber.startsWith('+')) {
+        twiml = `<?xml version="1.0" encoding="UTF-8"?>
+<Response>
+  <Dial callerId="+17655076878">
+    <Number>${toNumber}</Number>
+  </Dial>
+</Response>`;
+      } else {
+        twiml = `<?xml version="1.0" encoding="UTF-8"?>
+<Response>
+  <Say voice="alice">Invalid phone number</Say>
+</Response>`;
+      }
+      
+      reply.header('Content-Type', 'text/xml');
+      return reply.send(twiml);
     });
 
     return app;

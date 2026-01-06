@@ -12,7 +12,7 @@ const users = [
         id: 'user_001',
         email: 'admin@example.com',
         // Password: admin123
-        passwordHash: '$2b$10$Y7LxQ.2tVPaQH4k9YRfIW.pxP5zPgJx/JHSASYAcDmWkUZRc3ttya',
+        passwordHash: '$2b$10$qHYTTMZCK8aV.xsx9GwW1.78IpO7a6mvREleu6X.6jZ8aMwH92iC.',
         name: 'Admin User',
         role: 'admin'
     },
@@ -20,7 +20,7 @@ const users = [
         id: 'user_002',
         email: 'agent@example.com',
         // Password: agent123
-        passwordHash: '$2b$10$n5RkQy/WqA6MHs3JjN8hXuFZ6WqSvVxZ0D7YmR9kPeL.5ZHxGJKLO',
+        passwordHash: '$2b$10$4CelbV5Njfo9rNDj16dSbe4ZNLPntWwQaYZjklAYcESZCtPhv9wru',
         name: 'Agent User',
         role: 'agent'
     },
@@ -28,7 +28,7 @@ const users = [
         id: 'user_003',
         email: 'manager@example.com',
         // Password: manager123
-        passwordHash: '$2b$10$n84dWa7N4NjOLJ0JmloGPuWKqCvT4RgLmO2sP8NkJeX.8QyHzGK3e',
+        passwordHash: '$2b$10$6meeNQaeQ5mUK534pGXOUezV6yJjkxzphmunChYPMHtoVgqDGft86',
         name: 'Manager User',
         role: 'manager'
     }

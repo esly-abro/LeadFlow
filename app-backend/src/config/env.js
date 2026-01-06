@@ -5,14 +5,19 @@
 
 require('dotenv').config();
 
-const requiredVars = [
-    'JWT_SECRET',
-    'ZOHO_CLIENT_ID',
-    'ZOHO_CLIENT_SECRET',
-    'ZOHO_REFRESH_TOKEN',
-    'INGESTION_SERVICE_URL',
-    'INGESTION_SERVICE_API_KEY'
-];
+// In development/demo mode, only JWT_SECRET is truly required
+const isDemoMode = process.env.DEMO_MODE === 'true' || process.env.NODE_ENV === 'development';
+
+const requiredVars = isDemoMode 
+    ? ['JWT_SECRET']
+    : [
+        'JWT_SECRET',
+        'ZOHO_CLIENT_ID',
+        'ZOHO_CLIENT_SECRET',
+        'ZOHO_REFRESH_TOKEN',
+        'INGESTION_SERVICE_URL',
+        'INGESTION_SERVICE_API_KEY'
+    ];
 
 // Validate required environment variables
 const missing = requiredVars.filter(v => !process.env[v]);
