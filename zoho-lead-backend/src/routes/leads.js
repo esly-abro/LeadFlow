@@ -9,7 +9,6 @@ const Joi = require('joi');
 const leadNormalizer = require('../services/leadNormalizer');
 const duplicateDetector = require('../services/duplicateDetector');
 const logger = require('../utils/logger');
-const callScheduler = require('../services/callScheduler');
 
 /**
  * Request body validation schema
@@ -114,40 +113,7 @@ router.post('/', async (req, res, next) => {
             leadId: result.leadId
         });
 
-        // Step 4: Schedule call for new leads (fire-and-forget, non-blocking)
-        if (result.action === 'created' && value.phone) {
-            try {
-                // Schedule call asynchronously without blocking the response
-                setImmediate(() => {
-                    callScheduler.scheduleCall(
-                        value.phone,
-                        {
-                            leadId: result.leadId,
-                            name: value.name,
-                            email: value.email,
-                            source: value.source
-                        },
-                        {
-                            // Optional: Add status callback URL
-                            // statusCallback: `${process.env.BASE_URL}/api/exotel/status-callback`
-                        }
-                    );
-                });
-
-                logger.info('Call scheduled for new lead', {
-                    leadId: result.leadId,
-                    hasPhone: !!value.phone
-                });
-            } catch (callError) {
-                // Log but don't fail the request
-                logger.error('Failed to schedule call, but lead was created', {
-                    leadId: result.leadId,
-                    error: callError.message
-                });
-            }
-        }
-
-        // Step 5: Return success response
+        // Step 4: Return success response
         res.status(result.action === 'created' ? 201 : 200).json({
             success: true,
             action: result.action,
