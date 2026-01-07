@@ -1,12 +1,12 @@
 import { useState } from 'react';
-import { useData, Lead } from '../context/DataContext';
+import { useData, Lead, AGENTS } from '../context/DataContext';
 import { Button } from '../components/ui/button';
 import { Input } from '../components/ui/input';
 import { Card } from '../components/ui/card';
 import { Badge } from '../components/ui/badge';
 import {
   Plus, Upload, Filter, Search, Phone, Mail, Calendar,
-  MoreHorizontal, Layout, LayoutList, Table as TableIcon, Headphones, X, Download, User, Building
+  MoreHorizontal, Layout, LayoutList, Table as TableIcon, Headphones, X, Download, User, UserCheck
 } from 'lucide-react';
 import { Link } from 'react-router-dom';
 import {
@@ -23,36 +23,71 @@ import * as XLSX from 'xlsx';
 
 // --- Sub-Components for Different Views ---
 
-const LeadsTable = ({ leads }: { leads: Lead[] }) => (
+const LeadsTable = ({ leads, isAdmin, onAssign }: { leads: Lead[], isAdmin: boolean, onAssign: (leadId: string, agentId: string) => void }) => (
   <Card className="overflow-hidden">
     <div className="overflow-x-auto">
       <table className="w-full">
         <thead>
           <tr className="border-b border-gray-200 bg-slate-50">
-            <th className="px-6 py-4 text-left text-sm font-semibold text-gray-900">Name</th>
-            <th className="px-6 py-4 text-left text-sm font-semibold text-gray-900">Phone</th>
-            <th className="px-6 py-4 text-left text-sm font-semibold text-gray-900">Source</th>
-            <th className="px-6 py-4 text-left text-sm font-semibold text-gray-900">Status</th>
-            <th className="px-6 py-4 text-left text-sm font-semibold text-gray-900">Last Action</th>
-            <th className="px-6 py-4"></th>
+            <th className="px-4 py-4 text-left text-sm font-semibold text-gray-900">Lead ID</th>
+            <th className="px-4 py-4 text-left text-sm font-semibold text-gray-900">Phone</th>
+            <th className="px-4 py-4 text-left text-sm font-semibold text-gray-900">Source</th>
+            <th className="px-4 py-4 text-left text-sm font-semibold text-gray-900">Status</th>
+            {isAdmin && (
+              <th className="px-4 py-4 text-left text-sm font-semibold text-gray-900">Assigned To</th>
+            )}
+            <th className="px-4 py-4 text-left text-sm font-semibold text-gray-900">Last Action</th>
+            <th className="px-4 py-4"></th>
           </tr>
         </thead>
         <tbody>
-          {leads.map((lead) => (
+          {leads.map((lead, index) => (
             <tr key={lead.id} className="border-b border-gray-100 hover:bg-gray-50 transition-colors">
-              <td className="px-6 py-4 text-sm text-gray-900 font-medium">{lead.name}</td>
+              <td className="px-4 py-4">
+                <div className="flex items-center gap-2">
+                  <span className="inline-flex items-center justify-center px-2 py-1 text-xs font-bold bg-blue-100 text-blue-700 rounded">
+                    L{String(index + 1).padStart(3, '0')}
+                  </span>
+                  <span className="text-sm font-medium text-gray-900">{lead.name}</span>
+                </div>
+              </td>
               <td className="px-6 py-4 text-sm text-gray-700">{lead.phone}</td>
               <td className="px-6 py-4 text-sm text-gray-700">{lead.source}</td>
               <td className="px-6 py-4">
                 <StatusBadge status={lead.status} />
               </td>
+              {isAdmin && (
+                <td className="px-6 py-4">
+                  <Select
+                    value={lead.assignedTo?.id || 'unassigned'}
+                    onValueChange={(value) => onAssign(lead.id, value)}
+                  >
+                    <SelectTrigger className="w-[160px] h-8 text-sm">
+                      <SelectValue placeholder="Assign agent" />
+                    </SelectTrigger>
+                    <SelectContent>
+                      <SelectItem value="unassigned">
+                        <span className="text-gray-400">Unassigned</span>
+                      </SelectItem>
+                      {AGENTS.filter(a => a.role === 'agent' || a.role === 'manager').map(agent => (
+                        <SelectItem key={agent.id} value={agent.id}>
+                          <div className="flex items-center gap-2">
+                            <UserCheck className="h-3 w-3" />
+                            {agent.name}
+                          </div>
+                        </SelectItem>
+                      ))}
+                    </SelectContent>
+                  </Select>
+                </td>
+              )}
               <td className="px-6 py-4 text-sm text-gray-700">
                 {lead.lastActivity ? new Date(lead.lastActivity).toLocaleDateString() : '-'}
               </td>
               <td className="px-6 py-4">
                 <Link to={`/leads/${lead.id}`}>
                   <Button variant="outline" size="sm" className="rounded-md border-blue-300 text-blue-600 hover:bg-blue-50">
-                    Call Agent
+                    View
                   </Button>
                 </Link>
               </td>
@@ -60,7 +95,7 @@ const LeadsTable = ({ leads }: { leads: Lead[] }) => (
           ))}
           {leads.length === 0 && (
             <tr>
-              <td colSpan={6} className="px-6 py-8 text-center text-gray-500">
+              <td colSpan={isAdmin ? 7 : 6} className="px-6 py-8 text-center text-gray-500">
                 No leads found matching your criteria.
               </td>
             </tr>
@@ -122,7 +157,11 @@ const LeadsList = ({ leads }: { leads: Lead[] }) => (
 );
 
 const LeadsKanban = ({ leads }: { leads: Lead[] }) => {
-  const statuses = ['New', 'Contacted', 'Qualified', 'Proposal', 'Negotiation', 'Closed'];
+  const statuses = [
+    'New Lead', 'Auto-Contacted', 'Engaged', 'Scheduling',
+    'Site Visit Scheduled', 'Site Visit Completed', 'Follow-up',
+    'Negotiation', 'Closed Won', 'Closed Lost'
+  ];
   // Include statuses that are in leads but not in the default list
   const allStatuses = Array.from(new Set([...statuses, ...leads.map(l => l.status)]));
 
@@ -173,25 +212,24 @@ const LeadsKanban = ({ leads }: { leads: Lead[] }) => {
 const StatusBadge = ({ status }: { status: string }) => {
   const getStatusStyles = (s: string) => {
     switch (s) {
-      case 'WhatsApp Sent':
-      case 'Contacted':
+      case 'Auto-Contacted':
+      case 'Engaged':
+      case 'Follow-up':
         return 'bg-blue-100 text-blue-700 hover:bg-blue-100';
+      case 'New Lead':
       case 'No Response':
-      case 'New':
         return 'bg-yellow-100 text-yellow-700 hover:bg-yellow-100';
-      case 'IVR Attempted':
-      case 'Proposal Sent':
-      case 'Proposal':
-        return 'bg-purple-100 text-purple-700 hover:bg-purple-100';
-      case 'Human Call Scheduled':
-      case 'Qualified':
+      case 'Scheduling':
       case 'Negotiation':
-      case 'Site Visit Booked':
+      case 'Nurture':
+        return 'bg-purple-100 text-purple-700 hover:bg-purple-100';
+      case 'Site Visit Scheduled':
+      case 'Site Visit Completed':
+      case 'Closed Won':
         return 'bg-green-100 text-green-700 hover:bg-green-100';
-      case 'Closed':
-        return 'bg-emerald-100 text-emerald-800 hover:bg-emerald-100';
-      case 'Lost':
+      case 'Closed Lost':
       case 'Not Interested':
+      case 'Invalid':
         return 'bg-red-100 text-red-700 hover:bg-red-100';
       default:
         return 'bg-gray-100 text-gray-700';
@@ -207,7 +245,7 @@ const StatusBadge = ({ status }: { status: string }) => {
 
 
 export default function Leads() {
-  const { leads, loading, error, refreshLeads } = useData();
+  const { leads, loading, error, refreshLeads, currentUser, assignLead } = useData();
   const [view, setView] = useState<'list' | 'kanban' | 'table'>('table'); // Default to table to match previous behavior
   const [searchQuery, setSearchQuery] = useState('');
   const [statusFilter, setStatusFilter] = useState('all');
@@ -224,10 +262,20 @@ export default function Leads() {
     source: 'Website'
   });
 
-  const filteredLeads = leads.filter(lead => {
-    const matchesSearch = lead.name.toLowerCase().includes(searchQuery.toLowerCase()) ||
-      lead.email.toLowerCase().includes(searchQuery.toLowerCase()) ||
-      lead.company?.toLowerCase().includes(searchQuery.toLowerCase()); // Added optional chaining for company
+  // Role-based lead filtering: agents see only their assigned leads
+  const visibleLeads = currentUser?.role === 'agent'
+    ? leads.filter(lead => lead.assignedTo?.id === currentUser.id)
+    : leads; // Admin and manager see all leads
+
+  const filteredLeads = visibleLeads.filter((lead, index) => {
+    // Generate lead ID for search matching (L001, L002, etc.)
+    const leadId = `L${String(index + 1).padStart(3, '0')}`;
+    const searchLower = searchQuery.toLowerCase();
+
+    const matchesSearch = lead.name.toLowerCase().includes(searchLower) ||
+      lead.email.toLowerCase().includes(searchLower) ||
+      lead.company?.toLowerCase().includes(searchLower) ||
+      leadId.toLowerCase().includes(searchLower); // Match lead ID
     const matchesStatus = statusFilter === 'all' || lead.status === statusFilter;
     const matchesSource = sourceFilter === 'all' || lead.source === sourceFilter;
 
@@ -356,14 +404,27 @@ export default function Leads() {
               </SelectTrigger>
               <SelectContent>
                 <SelectItem value="all">All Statuses</SelectItem>
-                <SelectItem value="New">New</SelectItem>
-                <SelectItem value="Call Attended">Call Attended</SelectItem>
-                <SelectItem value="No Response">No Response</SelectItem>
+                <SelectItem value="New Lead">New Lead</SelectItem>
+                <SelectItem value="Auto-Contacted">Auto-Contacted</SelectItem>
+                <SelectItem value="Engaged">Engaged</SelectItem>
+                <SelectItem value="Scheduling">Scheduling</SelectItem>
+                <SelectItem value="Site Visit Scheduled">Site Visit Scheduled</SelectItem>
+                <SelectItem value="Site Visit Completed">Site Visit Completed</SelectItem>
+                <SelectItem value="Follow-up">Follow-up</SelectItem>
+                <SelectItem value="Negotiation">Negotiation</SelectItem>
+                <SelectItem value="Closed Won">Closed Won</SelectItem>
+                <SelectItem value="Closed Lost">Closed Lost</SelectItem>
                 <SelectItem value="Not Interested">Not Interested</SelectItem>
-                <SelectItem value="Site Visit Booked">Site Visit Booked</SelectItem>
+                <SelectItem value="Invalid">Invalid</SelectItem>
+                <SelectItem value="Nurture">Nurture</SelectItem>
                 {/* Dynamically add other statuses found in filtering */}
                 {Array.from(new Set(leads.map(l => l.status)))
-                  .filter(s => !['New', 'Call Attended', 'No Response', 'Not Interested', 'Site Visit Booked'].includes(s))
+                  .filter(s => ![
+                    'New Lead', 'Auto-Contacted', 'Engaged', 'Scheduling',
+                    'Site Visit Scheduled', 'Site Visit Completed', 'Follow-up',
+                    'Negotiation', 'Closed Won', 'Closed Lost', 'Not Interested',
+                    'Invalid', 'Nurture'
+                  ].includes(s))
                   .map(s => <SelectItem key={s} value={s}>{s}</SelectItem>)
                 }
               </SelectContent>
@@ -420,7 +481,7 @@ export default function Leads() {
 
       {/* Content Area */}
       <div className="flex-1 overflow-auto min-h-0">
-        {view === 'table' && <LeadsTable leads={filteredLeads} />}
+        {view === 'table' && <LeadsTable leads={filteredLeads} isAdmin={currentUser?.role === 'admin' || currentUser?.role === 'manager'} onAssign={assignLead} />}
         {view === 'list' && <LeadsList leads={filteredLeads} />}
         {view === 'kanban' && <LeadsKanban leads={filteredLeads} />}
       </div>

@@ -63,7 +63,7 @@ export default function Dashboard() {
     { name: 'Conference', value: leads.filter(l => l.source === 'Conference').length, color: '#10b981' },
   ];
 
-  const leadsNeedingAttention = leads.filter(l => ['Not Interested', 'No Response'].includes(l.status)).slice(0, 3);
+  const leadsNeedingAttention = leads.filter(l => ['Follow-up', 'Not Interested', 'Nurture'].includes(l.status)).slice(0, 5);
 
   const teamPerformance = [
     { name: 'John Doe', active: 3, closed: 2 },
@@ -80,9 +80,6 @@ export default function Dashboard() {
 
     return isToday && !isStatusUpdate && isRelevant;
   });
-
-  // Today's meetings from site visits
-  const todaysMeetings = siteVisits;
 
   return (
     <div className="space-y-6">
@@ -269,41 +266,48 @@ export default function Dashboard() {
               </Link>
             </CardHeader>
             <CardContent className="flex-1 overflow-auto custom-scrollbar">
-              {todaysMeetings.length > 0 ? (
+              {todaysActivities.length > 0 ? (
                 <div className="space-y-4">
-                  {todaysMeetings.map((meeting) => (
-                    <div key={meeting._id} className="gap-3 flex flex-col p-3 hover:bg-slate-50 rounded-md transition-colors border border-gray-100 hover:border-slate-200 shadow-sm">
-                      <div className="flex justify-between items-start">
-                        <div className="flex items-center gap-2">
-                          <span className="text-xs font-bold text-blue-600 bg-blue-50 px-2 py-0.5 rounded uppercase tracking-wide">
-                            Site Visit
+                  {todaysActivities.map((activity) => {
+                    const lead = leads.find(l => l.id === activity.leadId);
+                    return (
+                      <div key={activity.id} className="gap-3 flex flex-col p-3 hover:bg-slate-50 rounded-md transition-colors border border-gray-100 hover:border-slate-200 shadow-sm">
+                        <div className="flex justify-between items-start">
+                          <div className="flex items-center gap-2">
+                            <span className="text-xs font-bold text-blue-600 bg-blue-50 px-2 py-0.5 rounded uppercase tracking-wide">
+                              {activity.type}
+                            </span>
+                          </div>
+                          <span className="text-xs text-gray-400 font-medium">
+                            {new Date(activity.timestamp).toLocaleTimeString([], { hour: '2-digit', minute: '2-digit' })}
                           </span>
                         </div>
-                        <span className="text-xs text-gray-400 font-medium">
-                          {new Date(meeting.scheduledAt).toLocaleTimeString([], { hour: '2-digit', minute: '2-digit' })}
-                        </span>
-                      </div>
-                      <div>
-                        <p className="text-sm font-medium text-gray-900 leading-tight mb-1">Site visit with {meeting.lead?.name}</p>
-                        <div className="flex items-center gap-1 text-xs text-gray-500">
-                          <span>Lead:</span>
-                          <span className="font-medium text-blue-700">{meeting.lead?.name || 'Unknown Lead'}</span>
+
+                        <div>
+                          <p className="text-sm font-medium text-gray-900 leading-tight mb-1">{activity.description}</p>
+                          <div className="flex items-center gap-1 text-xs text-gray-500">
+                            <span>with</span>
+                            <span className="font-medium text-blue-700">{lead?.name || 'Unknown Lead'}</span>
+                          </div>
+                        </div>
+
+                        <div className="flex items-center justify-between pt-2 border-t border-gray-50 mt-1">
+                          <div className="flex items-center gap-1 text-[10px] text-gray-400">
+                            <CheckCircle2 className="h-3 w-3" />
+                            <span>{activity.user}</span>
+                          </div>
                         </div>
                       </div>
-                      <div className="flex items-center justify-between pt-2 border-t border-gray-50 mt-1">
-                        <div className="flex items-center gap-1 text-[10px] text-gray-400">
-                          <CheckCircle2 className="h-3 w-3" />
-                          <span>{meeting.confirmedBy}</span>
-                        </div>
-                      </div>
-                    </div>
-                  ))}
+                    );
+                  })}
                 </div>
               ) : (
                 <div className="text-center py-12 text-gray-500 flex flex-col items-center justify-center h-full">
-                  <Calendar className="h-12 w-12 mb-3 text-gray-300" />
-                  <p>No meetings scheduled for today.</p>
-                  <Button variant="link" className="mt-2 text-blue-600">Schedule a meeting</Button>
+                  <Target className="h-12 w-12 mb-3 text-gray-300" />
+                  <p>No active site visits or negotiations.</p>
+                  <Link to="/leads">
+                    <Button variant="link" className="mt-2 text-blue-600">Find leads</Button>
+                  </Link>
                 </div>
               )}
             </CardContent>

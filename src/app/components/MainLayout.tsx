@@ -11,6 +11,7 @@ import {
   Search,
   Bell,
   HelpCircle,
+  Check,
   ChevronDown,
   Plus,
   Upload,
@@ -25,13 +26,17 @@ import { Avatar, AvatarFallback } from './ui/avatar';
 import {
   DropdownMenu,
   DropdownMenuContent,
+  DropdownMenuGroup,
   DropdownMenuItem,
+  DropdownMenuLabel,
+  DropdownMenuSeparator,
   DropdownMenuTrigger,
 } from './ui/dropdown-menu';
 
 export default function MainLayout() {
   const location = useLocation();
   const [sidebarOpen, setSidebarOpen] = useState(false);
+  const [workspaceDropdownOpen, setWorkspaceDropdownOpen] = useState(false);
 
   const navigation = [
     { name: 'Dashboard', href: '/dashboard', icon: LayoutDashboard },
@@ -58,25 +63,87 @@ export default function MainLayout() {
             >
               {sidebarOpen ? <X className="h-6 w-6" /> : <Menu className="h-6 w-6" />}
             </button>
-            
+
             <div className="flex items-center gap-2">
               <Building2 className="h-6 w-6 text-blue-600" />
-              <span className="font-bold text-lg hidden sm:block">LeadFlow</span>
+              <span className="font-bold text-lg hidden sm:block">JK Homes</span>
             </div>
 
-            <DropdownMenu>
-              <DropdownMenuTrigger asChild>
-                <Button variant="ghost" className="gap-2">
-                  <span className="hidden sm:inline">My Workspace</span>
-                  <ChevronDown className="h-4 w-4" />
-                </Button>
-              </DropdownMenuTrigger>
-              <DropdownMenuContent>
-                <DropdownMenuItem>My Workspace</DropdownMenuItem>
-                <DropdownMenuItem>Team Workspace</DropdownMenuItem>
-                <DropdownMenuItem>Create New...</DropdownMenuItem>
-              </DropdownMenuContent>
-            </DropdownMenu>
+            {/* Workspace Dropdown - Custom Implementation */}
+            <div className="relative">
+              <Button
+                variant="ghost"
+                className="gap-2"
+                onClick={() => setWorkspaceDropdownOpen(!workspaceDropdownOpen)}
+              >
+                <span className="hidden sm:inline">My Workspace</span>
+                <ChevronDown className={`h-4 w-4 transition-transform ${workspaceDropdownOpen ? 'rotate-180' : ''}`} />
+              </Button>
+
+              {workspaceDropdownOpen && (
+                <>
+                  {/* Backdrop to close dropdown when clicking outside */}
+                  <div
+                    className="fixed inset-0 z-40"
+                    onClick={() => setWorkspaceDropdownOpen(false)}
+                  />
+
+                  {/* Dropdown Panel */}
+                  <div className="absolute left-0 top-full mt-2 w-56 bg-white border border-gray-200 rounded-lg shadow-xl z-50">
+                    <div className="px-3 py-2 border-b border-gray-100">
+                      <span className="text-sm font-semibold text-gray-900">My Workspace</span>
+                    </div>
+
+                    {/* Workspace List */}
+                    <div className="py-1">
+                      <button
+                        className="w-full flex items-center gap-2 px-3 py-2 text-sm hover:bg-gray-100 text-left"
+                        onClick={() => setWorkspaceDropdownOpen(false)}
+                      >
+                        <Check className="h-4 w-4 text-blue-600" />
+                        <span>My Workspace</span>
+                      </button>
+                      <button
+                        className="w-full flex items-center gap-2 px-3 py-2 pl-9 text-sm hover:bg-gray-100 text-left"
+                        onClick={() => setWorkspaceDropdownOpen(false)}
+                      >
+                        <span>JK Real Estate</span>
+                      </button>
+                      <button
+                        className="w-full flex items-center gap-2 px-3 py-2 pl-9 text-sm hover:bg-gray-100 text-left"
+                        onClick={() => setWorkspaceDropdownOpen(false)}
+                      >
+                        <span>Chennai Sales Team</span>
+                      </button>
+                    </div>
+
+                    <div className="border-t border-gray-100 py-1">
+                      <button
+                        className="w-full flex items-center gap-2 px-3 py-2 text-sm hover:bg-gray-100 text-left"
+                        onClick={() => setWorkspaceDropdownOpen(false)}
+                      >
+                        <Plus className="h-4 w-4 text-gray-500" />
+                        <span>Create New Workspace</span>
+                      </button>
+                      <button
+                        className="w-full flex items-center gap-2 px-3 py-2 text-sm hover:bg-gray-100 text-left"
+                        onClick={() => setWorkspaceDropdownOpen(false)}
+                      >
+                        <Settings className="h-4 w-4 text-gray-500" />
+                        <span>Workspace Settings</span>
+                      </button>
+                      <button
+                        className="w-full flex items-center gap-2 px-3 py-2 text-sm hover:bg-gray-100 text-left"
+                        onClick={() => setWorkspaceDropdownOpen(false)}
+                      >
+                        <Users className="h-4 w-4 text-gray-500" />
+                        <span>Manage Members</span>
+                      </button>
+                    </div>
+                  </div>
+                </>
+              )}
+            </div>
           </div>
 
           {/* Center - Search */}
@@ -136,7 +203,16 @@ export default function MainLayout() {
               <DropdownMenuContent align="end">
                 <DropdownMenuItem>Profile</DropdownMenuItem>
                 <DropdownMenuItem>Settings</DropdownMenuItem>
-                <DropdownMenuItem>Logout</DropdownMenuItem>
+                <DropdownMenuItem
+                  onClick={() => {
+                    localStorage.removeItem('accessToken');
+                    localStorage.removeItem('refreshToken');
+                    window.location.href = '/login';
+                  }}
+                  className="text-red-600 focus:text-red-600"
+                >
+                  Logout
+                </DropdownMenuItem>
               </DropdownMenuContent>
             </DropdownMenu>
           </div>
@@ -145,9 +221,8 @@ export default function MainLayout() {
 
       {/* Sidebar */}
       <aside
-        className={`fixed left-0 top-16 bottom-0 w-64 bg-white border-r border-gray-200 z-30 transition-transform duration-300 ${
-          sidebarOpen ? 'translate-x-0' : '-translate-x-full lg:translate-x-0'
-        }`}
+        className={`fixed left-0 top-16 bottom-0 w-64 bg-white border-r border-gray-200 z-30 transition-transform duration-300 ${sidebarOpen ? 'translate-x-0' : '-translate-x-full lg:translate-x-0'
+          }`}
       >
         <nav className="h-full p-4 space-y-1 overflow-y-auto">
           {navigation.map((item) => {
@@ -158,11 +233,10 @@ export default function MainLayout() {
                 key={item.name}
                 to={item.href}
                 onClick={() => setSidebarOpen(false)}
-                className={`flex items-center gap-3 px-3 py-2 rounded-md transition-colors ${
-                  active
-                    ? 'bg-blue-50 text-blue-600'
-                    : 'text-gray-700 hover:bg-gray-100'
-                }`}
+                className={`flex items-center gap-3 px-3 py-2 rounded-md transition-colors ${active
+                  ? 'bg-blue-50 text-blue-600'
+                  : 'text-gray-700 hover:bg-gray-100'
+                  }`}
               >
                 <Icon className="h-5 w-5" />
                 <span>{item.name}</span>

@@ -10,6 +10,9 @@ const logger = require('./utils/logger');
 const requestLogger = require('./middleware/logger');
 const errorHandler = require('./middleware/errorHandler');
 const leadsRoutes = require('./routes/leads');
+const authRoutes = require('./routes/auth');
+const activitiesRoutes = require('./routes/activities');
+const siteVisitsRoutes = require('./routes/siteVisits');
 
 // Create Express app
 const app = express();
@@ -41,6 +44,9 @@ app.get('/', (req, res) => {
         service: 'Zoho Lead Ingestion Backend',
         version: '1.0.0',
         endpoints: {
+            'POST /auth/login': 'Authenticate user',
+            'POST /auth/logout': 'Logout user',
+            'POST /auth/refresh': 'Refresh access token',
             'POST /leads': 'Create or update lead',
             'GET /leads/sources': 'Get valid source values',
             'GET /health': 'Health check'
@@ -49,7 +55,10 @@ app.get('/', (req, res) => {
 });
 
 // API Routes
-app.use('/leads', leadsRoutes);
+app.use('/auth', authRoutes);
+app.use('/api/leads', leadsRoutes);
+app.use('/api/activities', activitiesRoutes);
+app.use('/api/site-visits', siteVisitsRoutes);
 
 // 404 handler
 app.use((req, res) => {
