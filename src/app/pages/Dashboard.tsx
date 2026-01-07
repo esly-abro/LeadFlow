@@ -273,7 +273,7 @@ export default function Dashboard() {
               </Link>
             </CardHeader>
             <CardContent className="flex-1 overflow-auto custom-scrollbar">
-              {todaysActivities.length > 0 ? (
+              {todaysMeetings.length > 0 ? (
                 <div className="space-y-4">
                   {todaysMeetings.map((meeting) => (
                     <Link 
@@ -287,20 +287,15 @@ export default function Dashboard() {
                             Site Visit
                           </span>
                         </div>
-
-                        <div>
-                          <p className="text-sm font-medium text-gray-900 leading-tight mb-1">{activity.description}</p>
-                          <div className="flex items-center gap-1 text-xs text-gray-500">
-                            <span>with</span>
-                            <span className="font-medium text-blue-700">{lead?.name || 'Unknown Lead'}</span>
-                          </div>
-                        </div>
-
-                        <div className="flex items-center justify-between pt-2 border-t border-gray-50 mt-1">
-                          <div className="flex items-center gap-1 text-[10px] text-gray-400">
-                            <CheckCircle2 className="h-3 w-3" />
-                            <span>{activity.user}</span>
-                          </div>
+                        <span className="text-xs text-gray-400 font-medium">
+                          {new Date(meeting.scheduledAt).toLocaleTimeString([], { hour: '2-digit', minute: '2-digit' })}
+                        </span>
+                      </div>
+                      <div>
+                        <p className="text-sm font-medium text-gray-900 leading-tight mb-1">Site visit with {meeting.lead?.name}</p>
+                        <div className="flex items-center gap-1 text-xs text-gray-500">
+                          <span>Lead:</span>
+                          <span className="font-medium text-blue-700">{meeting.lead?.name || 'Unknown Lead'}</span>
                         </div>
                       </div>
                       <div className="flex items-center justify-between pt-2 border-t border-gray-50 mt-1">
@@ -314,11 +309,9 @@ export default function Dashboard() {
                 </div>
               ) : (
                 <div className="text-center py-12 text-gray-500 flex flex-col items-center justify-center h-full">
-                  <Target className="h-12 w-12 mb-3 text-gray-300" />
-                  <p>No active site visits or negotiations.</p>
-                  <Link to="/leads">
-                    <Button variant="link" className="mt-2 text-blue-600">Find leads</Button>
-                  </Link>
+                  <Calendar className="h-12 w-12 mb-3 text-gray-300" />
+                  <p>No meetings scheduled for today.</p>
+                  <Button variant="link" className="mt-2 text-blue-600">Schedule a meeting</Button>
                 </div>
               )}
             </CardContent>
