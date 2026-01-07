@@ -63,7 +63,7 @@ export default function Dashboard() {
     { name: 'Conference', value: leads.filter(l => l.source === 'Conference').length, color: '#10b981' },
   ];
 
-  const leadsNeedingAttention = leads.filter(l => ['Not Interested', 'No Response'].includes(l.status)).slice(0, 3);
+  const leadsNeedingAttention = leads.filter(l => ['Follow-up', 'Not Interested', 'Nurture'].includes(l.status)).slice(0, 5);
 
   const teamPerformance = [
     { name: 'John Doe', active: 3, closed: 2 },
@@ -81,8 +81,12 @@ export default function Dashboard() {
     return isToday && !isStatusUpdate && isRelevant;
   });
 
-  // Today's meetings from site visits
-  const todaysMeetings = siteVisits;
+  // Today's meetings from site visits - filter only for today's date
+  const todaysMeetings = siteVisits.filter(visit => {
+    const visitDate = new Date(visit.scheduledAt);
+    const today = new Date();
+    return visitDate.toDateString() === today.toDateString();
+  });
 
   return (
     <div className="space-y-6">
@@ -272,7 +276,11 @@ export default function Dashboard() {
               {todaysMeetings.length > 0 ? (
                 <div className="space-y-4">
                   {todaysMeetings.map((meeting) => (
-                    <div key={meeting._id} className="gap-3 flex flex-col p-3 hover:bg-slate-50 rounded-md transition-colors border border-gray-100 hover:border-slate-200 shadow-sm">
+                    <Link 
+                      key={meeting._id} 
+                      to={`/leads/${meeting.lead?._id || meeting.lead?.id}`}
+                      className="gap-3 flex flex-col p-3 hover:bg-slate-50 rounded-md transition-colors border border-gray-100 hover:border-blue-300 shadow-sm cursor-pointer block"
+                    >
                       <div className="flex justify-between items-start">
                         <div className="flex items-center gap-2">
                           <span className="text-xs font-bold text-blue-600 bg-blue-50 px-2 py-0.5 rounded uppercase tracking-wide">
@@ -296,7 +304,7 @@ export default function Dashboard() {
                           <span>{meeting.confirmedBy}</span>
                         </div>
                       </div>
-                    </div>
+                    </Link>
                   ))}
                 </div>
               ) : (

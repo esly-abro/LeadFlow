@@ -157,6 +157,7 @@ async function buildApp() {
         // Site Visit routes
         protectedApp.post('/api/leads/:id/site-visit', leadsController.postSiteVisit);
         protectedApp.get('/api/site-visits/today', leadsController.getTodaySiteVisits);
+        protectedApp.get('/api/site-visits/all', leadsController.getAllSiteVisitsHandler);
 
         // Activity routes
         protectedApp.post('/api/activities', leadsController.postActivity);

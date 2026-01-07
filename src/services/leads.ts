@@ -85,6 +85,13 @@ export async function getTodaySiteVisits() {
 }
 
 /**
+ * Get all site visits (for calendar)
+ */
+export async function getAllSiteVisits() {
+    return api.get('/api/site-visits/all');
+}
+
+/**
  * Create new activity
  */
 export async function createActivity(activity: any) {
