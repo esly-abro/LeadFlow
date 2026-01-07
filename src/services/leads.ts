@@ -69,3 +69,31 @@ export async function updateLeadStatus(id: string, status: string): Promise<Lead
     const { data } = await api.patch<Lead>(`/api/leads/${id}/status`, { status });
     return data;
 }
+
+/**
+ * Confirm site visit for a lead
+ */
+export async function confirmSiteVisit(leadId: string, scheduledAt: string) {
+    return api.post(`/api/leads/${leadId}/site-visit`, { scheduledAt });
+}
+
+/**
+ * Get today's site visits
+ */
+export async function getTodaySiteVisits() {
+    return api.get('/api/site-visits/today');
+}
+
+/**
+ * Create new activity
+ */
+export async function createActivity(activity: any) {
+  return api.post('/api/activities', activity);
+}
+
+/**
+ * Get recent activities
+ */
+export async function getRecentActivities() {
+  return api.get('/api/activities/recent');
+}

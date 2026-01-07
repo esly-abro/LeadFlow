@@ -67,10 +67,50 @@ async function updateLeadStatus(request, reply) {
     return reply.code(200).send(lead);
 }
 
+/**
+ * POST /api/leads/:id/site-visit
+ */
+async function postSiteVisit(request, reply) {
+    const leadId = request.params.id;
+    const { scheduledAt } = request.body;
+    const userId = request.user._id;
+    const visit = await leadsService.confirmSiteVisit(leadId, scheduledAt, userId);
+    return reply.code(201).send(visit);
+}
+
+/**
+ * GET /api/site-visits/today
+ */
+async function getTodaySiteVisits(request, reply) {
+    const userId = request.user._id;
+    const visits = await leadsService.getSiteVisitsForToday(userId);
+    return reply.send(visits);
+}
+
+/**
+ * POST /api/activities
+ */
+async function postActivity(request, reply) {
+    const activity = await leadsService.createActivity(request.body);
+    return reply.code(201).send(activity);
+}
+
+/**
+ * GET /api/activities/recent
+ */
+async function getRecentActivitiesHandler(request, reply) {
+    const activities = await leadsService.getRecentActivities(50);
+    return reply.send(activities);
+}
+
 module.exports = {
     getLeads,
     getLead,
     createLead,
     updateLead,
-    updateLeadStatus
+    updateLeadStatus,
+    postSiteVisit,
+    getTodaySiteVisits,
+    postActivity,
+    getRecentActivitiesHandler
 };

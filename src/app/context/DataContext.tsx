@@ -1,8 +1,9 @@
 import { createContext, useContext, useState, useEffect, ReactNode } from 'react';
-import { getLeads, updateLead as updateLeadAPI } from '../../services/leads';
+import { getLeads, updateLead as updateLeadAPI, confirmSiteVisit as confirmSiteVisitAPI, getTodaySiteVisits, createActivity as createActivityAPI, getRecentActivities } from '../../services/leads';
 
 export interface Lead {
   id: string;
+  _id?: string;
   name: string;
   email: string;
   phone: string;
@@ -25,11 +26,14 @@ export interface Lead {
 
 export interface Activity {
   id: string;
+  _id?: string;
   type: 'call' | 'email' | 'note' | 'meeting' | 'whatsapp' | 'status' | 'site_visit';
   leadId?: string;
   description: string;
+  title?: string;
   timestamp: string;
   user: string;
+  userName?: string;
 }
 
 export interface Message {
@@ -47,6 +51,14 @@ export interface Message {
   }[];
 }
 
+export interface SiteVisit {
+  _id: string;
+  lead: Lead;
+  scheduledAt: string;
+  confirmedBy: string;
+  createdAt: string;
+}
+
 interface DataContextType {
   leads: Lead[];
   activities: Activity[];
@@ -56,6 +68,8 @@ interface DataContextType {
   refreshLeads: () => Promise<void>;
   updateLead: (id: string, updates: Partial<Lead>) => void;
   addActivity: (activity: Omit<Activity, 'id'>) => void;
+  siteVisits: SiteVisit[];
+  confirmSiteVisit: (leadId: string, scheduledAt: string, leadName?: string) => Promise<void>;
 }
 
 const DataContext = createContext<DataContextType | undefined>(undefined);
@@ -66,6 +80,7 @@ export function DataProvider({ children }: { children: ReactNode }) {
   const [messages] = useState<Message[]>([]);
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState<string | null>(null);
+  const [siteVisits, setSiteVisits] = useState<SiteVisit[]>([]);
 
   const refreshLeads = async () => {
     try {
@@ -108,13 +123,52 @@ export function DataProvider({ children }: { children: ReactNode }) {
     }
   };
 
-  const addActivity = (activity: Omit<Activity, 'id'>) => {
-    const newActivity = {
-      ...activity,
-      id: Date.now().toString()
-    };
-    setActivities(prev => [newActivity, ...prev]);
+  const fetchActivities = async () => {
+    try {
+      const response = await getRecentActivities();
+      setActivities(response.data);
+    } catch (err) {
+      setActivities([]);
+    }
   };
+
+  const addActivity = async (activity: Omit<Activity, 'id'>) => {
+    await createActivityAPI(activity);
+    await fetchActivities();
+  };
+
+  const fetchSiteVisits = async () => {
+    try {
+      const response = await getTodaySiteVisits();
+      setSiteVisits(response.data);
+    } catch (err) {
+      setSiteVisits([]);
+    }
+  };
+
+  const confirmSiteVisit = async (leadId: string, scheduledAt: string, leadName?: string) => {
+    await confirmSiteVisitAPI(leadId, scheduledAt);
+    // Also create an activity for this site visit
+    await createActivityAPI({
+      leadId,
+      type: 'site_visit',
+      title: `Site visit scheduled with ${leadName || 'client'}`,
+      description: `Site visit confirmed for ${new Date(scheduledAt).toLocaleString()}`,
+      userName: 'Current User',
+      scheduledAt
+    });
+    await fetchSiteVisits();
+    await fetchActivities();
+  };
+
+  useEffect(() => {
+    fetchSiteVisits();
+  }, []);
+
+  // Initial fetch of activities
+  useEffect(() => {
+    fetchActivities();
+  }, []);
 
   return (
     <DataContext.Provider value={{
@@ -125,7 +179,9 @@ export function DataProvider({ children }: { children: ReactNode }) {
       error,
       refreshLeads,
       updateLead,
-      addActivity
+      addActivity,
+      siteVisits,
+      confirmSiteVisit,
     }}>
       {children}
     </DataContext.Provider>
