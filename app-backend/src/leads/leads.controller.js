@@ -88,6 +88,15 @@ async function getTodaySiteVisits(request, reply) {
 }
 
 /**
+ * GET /api/site-visits/all
+ */
+async function getAllSiteVisitsHandler(request, reply) {
+    const userId = request.user._id;
+    const visits = await leadsService.getAllSiteVisits(userId);
+    return reply.send(visits);
+}
+
+/**
  * POST /api/activities
  */
 async function postActivity(request, reply) {
@@ -111,6 +120,7 @@ module.exports = {
     updateLeadStatus,
     postSiteVisit,
     getTodaySiteVisits,
+    getAllSiteVisitsHandler,
     postActivity,
     getRecentActivitiesHandler
 };

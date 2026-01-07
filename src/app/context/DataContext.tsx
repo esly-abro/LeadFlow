@@ -1,5 +1,5 @@
 import { createContext, useContext, useState, useEffect, ReactNode } from 'react';
-import { getLeads, updateLead as updateLeadAPI, confirmSiteVisit as confirmSiteVisitAPI, getTodaySiteVisits, createActivity as createActivityAPI, getRecentActivities } from '../../services/leads';
+import { getLeads, updateLead as updateLeadAPI, confirmSiteVisit as confirmSiteVisitAPI, getAllSiteVisits, createActivity as createActivityAPI, getRecentActivities } from '../../services/leads';
 
 export interface Lead {
   id: string;
@@ -139,7 +139,7 @@ export function DataProvider({ children }: { children: ReactNode }) {
 
   const fetchSiteVisits = async () => {
     try {
-      const response = await getTodaySiteVisits();
+      const response = await getAllSiteVisits();
       setSiteVisits(response.data);
     } catch (err) {
       setSiteVisits([]);
