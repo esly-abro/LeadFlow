@@ -9,6 +9,12 @@ const { mapZohoLeadToFrontend, mapZohoNoteToActivity } = require('./zoho.mapper'
 const { filterLeadsByPermission } = require('../middleware/roles');
 const { NotFoundError } = require('../utils/errors');
 
+// MongoDB Lead model
+const Lead = require('../models/Lead');
+
+// Check if MongoDB is available
+const useDatabase = () => !!process.env.MONGODB_URI;
+
 // Demo mode flag - only enabled when explicitly set
 const isDemoMode = process.env.DEMO_MODE === 'true';
 
@@ -90,6 +96,50 @@ const mockLeads = [
  * Get all leads with pagination and filters
  */
 async function getLeads(user, { page = 1, limit = 20, status, source, owner }) {
+    // Use MongoDB if available
+    if (useDatabase()) {
+        const query = {};
+        
+        if (status) query.status = status;
+        if (source) query.source = source;
+        if (owner) query.assignedTo = owner;
+        
+        const skip = (parseInt(page) - 1) * parseInt(limit);
+        
+        const [leads, total] = await Promise.all([
+            Lead.find(query)
+                .sort({ createdAt: -1 })
+                .skip(skip)
+                .limit(parseInt(limit)),
+            Lead.countDocuments(query)
+        ]);
+        
+        // Map to frontend format
+        const mappedLeads = leads.map(lead => ({
+            id: lead._id.toString(),
+            name: lead.name,
+            email: lead.email,
+            phone: lead.phone,
+            company: lead.company,
+            source: lead.source,
+            status: lead.status,
+            score: lead.score,
+            assignedTo: lead.assignedTo?.toString(),
+            createdAt: lead.createdAt,
+            updatedAt: lead.updatedAt
+        }));
+        
+        return {
+            data: mappedLeads,
+            pagination: {
+                page: parseInt(page),
+                limit: parseInt(limit),
+                total,
+                totalPages: Math.ceil(total / parseInt(limit))
+            }
+        };
+    }
+    
     // Use mock data in demo mode
     if (isDemoMode) {
         let filteredLeads = [...mockLeads];
@@ -171,6 +221,29 @@ async function getLeads(user, { page = 1, limit = 20, status, source, owner }) {
  * Get single lead by ID
  */
 async function getLead(user, leadId) {
+    // Use MongoDB if available
+    if (useDatabase()) {
+        const lead = await Lead.findById(leadId);
+        if (!lead) {
+            throw new NotFoundError('Lead not found');
+        }
+        
+        return {
+            id: lead._id.toString(),
+            name: lead.name,
+            email: lead.email,
+            phone: lead.phone,
+            company: lead.company,
+            source: lead.source,
+            status: lead.status,
+            score: lead.score,
+            assignedTo: lead.assignedTo?.toString(),
+            createdAt: lead.createdAt,
+            updatedAt: lead.updatedAt,
+            activities: []
+        };
+    }
+    
     // Use mock data in demo mode
     if (isDemoMode) {
         const lead = mockLeads.find(l => l.id === leadId);
@@ -219,6 +292,37 @@ async function getLead(user, leadId) {
  * Create lead (proxy to ingestion service)
  */
 async function createLead(leadData) {
+    // Use MongoDB if available
+    if (useDatabase()) {
+        const newLead = new Lead({
+            name: leadData.name,
+            email: leadData.email,
+            phone: leadData.phone,
+            company: leadData.company || '',
+            source: leadData.source || 'Website',
+            status: 'New',
+            score: Math.floor(Math.random() * 40) + 60
+        });
+        
+        await newLead.save();
+        
+        return {
+            success: true,
+            lead: {
+                id: newLead._id.toString(),
+                name: newLead.name,
+                email: newLead.email,
+                phone: newLead.phone,
+                company: newLead.company,
+                source: newLead.source,
+                status: newLead.status,
+                score: newLead.score,
+                createdAt: newLead.createdAt,
+                updatedAt: newLead.updatedAt
+            }
+        };
+    }
+    
     // Use mock data in demo mode
     if (isDemoMode) {
         const newLead = {
@@ -258,8 +362,57 @@ function mapFrontendSourceToZoho(source) {
     return map[source] || source;
 }
 
+/**
+ * Update lead
+ */
+async function updateLead(user, leadId, updateData) {
+    // If using MongoDB, update in database
+    if (useDatabase()) {
+        const lead = await Lead.findByIdAndUpdate(
+            leadId,
+            {
+                ...updateData,
+                updatedAt: new Date()
+            },
+            { new: true }
+        );
+        
+        if (!lead) {
+            throw new NotFoundError('Lead not found');
+        }
+        
+        return {
+            id: lead._id.toString(),
+            name: lead.name,
+            email: lead.email,
+            phone: lead.phone,
+            company: lead.company,
+            source: lead.source,
+            status: lead.status,
+            score: lead.score,
+            assignedTo: lead.assignedTo?.toString(),
+            createdAt: lead.createdAt,
+            updatedAt: lead.updatedAt
+        };
+    }
+    
+    // Demo mode - update in memory (won't persist)
+    if (isDemoMode) {
+        const index = mockLeads.findIndex(l => l.id === leadId);
+        if (index === -1) {
+            throw new NotFoundError('Lead not found');
+        }
+        mockLeads[index] = { ...mockLeads[index], ...updateData, updatedAt: new Date().toISOString() };
+        return mockLeads[index];
+    }
+    
+    // TODO: Update in Zoho CRM
+    throw new Error('Zoho update not implemented yet');
+}
+
 module.exports = {
     getLeads,
     getLead,
-    createLead
+    createLead,
+    updateLead
 };

@@ -30,6 +30,12 @@ const config = {
     nodeEnv: process.env.NODE_ENV || 'development',
     port: parseInt(process.env.PORT, 10) || 4000,
 
+    // MongoDB
+    mongodb: {
+        uri: process.env.MONGODB_URI || null, // null = use in-memory fallback
+        dbName: process.env.MONGODB_DB_NAME || 'leadflow'
+    },
+
     // JWT
     jwt: {
         secret: process.env.JWT_SECRET,

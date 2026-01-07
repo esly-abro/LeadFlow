@@ -41,8 +41,36 @@ async function createLead(request, reply) {
     return reply.code(201).send(result);
 }
 
+/**
+ * PUT /api/leads/:id
+ * Update a lead
+ */
+async function updateLead(request, reply) {
+    const { id } = request.params;
+    const updateData = request.body;
+
+    const lead = await leadsService.updateLead(request.user, id, updateData);
+
+    return reply.code(200).send(lead);
+}
+
+/**
+ * PATCH /api/leads/:id/status
+ * Update lead status only
+ */
+async function updateLeadStatus(request, reply) {
+    const { id } = request.params;
+    const { status } = request.body;
+
+    const lead = await leadsService.updateLead(request.user, id, { status });
+
+    return reply.code(200).send(lead);
+}
+
 module.exports = {
     getLeads,
     getLead,
-    createLead
+    createLead,
+    updateLead,
+    updateLeadStatus
 };

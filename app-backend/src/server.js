@@ -1,15 +1,29 @@
 /**
  * Server Entry Point
- * Starts the Fastify application
+ * Starts the Fastify application with MongoDB connection
  */
 
 const buildApp = require('./app');
 const config = require('./config/env');
+const { connectDatabase, disconnectDatabase } = require('./config/database');
+const { seedDefaultUsers, useDatabase } = require('./users/users.model');
 
 async function start() {
     let app;
 
     try {
+        // Connect to MongoDB if configured
+        if (process.env.MONGODB_URI) {
+            console.log('📦 Connecting to MongoDB...');
+            await connectDatabase();
+            
+            // Seed default users if database is empty
+            await seedDefaultUsers();
+        } else {
+            console.log('⚠️  MONGODB_URI not set - using in-memory storage');
+            console.log('   Set MONGODB_URI in .env for persistent storage');
+        }
+
         // Build Fastify app
         app = await buildApp();
 
@@ -24,6 +38,7 @@ async function start() {
         console.log('================================');
         console.log(`Environment: ${config.nodeEnv}`);
         console.log(`Port: ${config.port}`);
+        console.log(`Database: ${process.env.MONGODB_URI ? 'MongoDB' : 'In-Memory'}`);
         console.log(`URL: http://localhost:${config.port}`);
         console.log('');
         console.log('Available Endpoints:');
@@ -53,6 +68,11 @@ async function start() {
 
         if (app) {
             await app.close();
+        }
+
+        // Disconnect from MongoDB
+        if (process.env.MONGODB_URI) {
+            await disconnectDatabase();
         }
 
         console.log('Server closed.');

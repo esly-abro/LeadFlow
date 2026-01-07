@@ -1,5 +1,5 @@
 import { createContext, useContext, useState, useEffect, ReactNode } from 'react';
-import { getLeads } from '../../services/leads';
+import { getLeads, updateLead as updateLeadAPI } from '../../services/leads';
 
 export interface Lead {
   id: string;
@@ -92,10 +92,20 @@ export function DataProvider({ children }: { children: ReactNode }) {
     }
   }, []);
 
-  const updateLead = (id: string, updates: Partial<Lead>) => {
+  const updateLead = async (id: string, updates: Partial<Lead>) => {
+    // Update local state immediately for responsiveness
     setLeads(prev => prev.map(lead =>
       lead.id === id ? { ...lead, ...updates } : lead
     ));
+    
+    // Persist to database
+    try {
+      await updateLeadAPI(id, updates);
+    } catch (err) {
+      console.error('Failed to update lead:', err);
+      // Optionally revert on error
+      // refreshLeads();
+    }
   };
 
   const addActivity = (activity: Omit<Activity, 'id'>) => {

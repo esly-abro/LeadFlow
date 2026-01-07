@@ -53,3 +53,19 @@ export async function createLead(leadData: {
     const { data } = await api.post('/api/leads', leadData);
     return data;
 }
+
+/**
+ * Update lead
+ */
+export async function updateLead(id: string, updateData: Partial<Lead>): Promise<Lead> {
+    const { data } = await api.put<Lead>(`/api/leads/${id}`, updateData);
+    return data;
+}
+
+/**
+ * Update lead status
+ */
+export async function updateLeadStatus(id: string, status: string): Promise<Lead> {
+    const { data } = await api.patch<Lead>(`/api/leads/${id}/status`, { status });
+    return data;
+}

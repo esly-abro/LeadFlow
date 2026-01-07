@@ -112,6 +112,8 @@ async function buildApp() {
         protectedApp.get('/api/leads', leadsController.getLeads);
         protectedApp.get('/api/leads/:id', leadsController.getLead);
         protectedApp.post('/api/leads', leadsController.createLead);
+        protectedApp.put('/api/leads/:id', leadsController.updateLead);
+        protectedApp.patch('/api/leads/:id/status', leadsController.updateLeadStatus);
 
         // Metrics routes
         protectedApp.get('/api/metrics/overview', metricsController.getOverview);
