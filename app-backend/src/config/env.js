@@ -58,9 +58,15 @@ const config = {
         apiKey: process.env.INGESTION_SERVICE_API_KEY
     },
 
-    // CORS
+    // CORS - allow multiple localhost ports in development
     cors: {
-        origin: process.env.FRONTEND_URL || 'http://localhost:5173'
+        origin: process.env.FRONTEND_URL || [
+            'http://localhost:5173',
+            'http://localhost:5174',
+            'http://localhost:5175',
+            'http://localhost:5176',
+            'http://localhost:3000'
+        ]
     }
 };
 

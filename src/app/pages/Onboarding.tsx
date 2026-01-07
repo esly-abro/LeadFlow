@@ -46,15 +46,14 @@ export default function Onboarding({ onComplete }: OnboardingProps) {
           <div className="mb-8 text-center">
             <div className="flex items-center justify-center gap-2 mb-4">
               <Building2 className="h-8 w-8 text-blue-600" />
-              <span className="text-2xl font-bold">LeadFlow</span>
+              <span className="text-2xl font-bold">JK Homes</span>
             </div>
             <div className="flex gap-2 justify-center mb-6">
               {[1, 2, 3, 4, 5].map((s) => (
                 <div
                   key={s}
-                  className={`w-12 h-2 rounded-full ${
-                    s <= step ? 'bg-blue-600' : 'bg-gray-200'
-                  }`}
+                  className={`w-12 h-2 rounded-full ${s <= step ? 'bg-blue-600' : 'bg-gray-200'
+                    }`}
                 />
               ))}
             </div>
@@ -64,7 +63,7 @@ export default function Onboarding({ onComplete }: OnboardingProps) {
           {/* Step 1: Welcome */}
           {step === 1 && (
             <div className="text-center space-y-6">
-              <h1 className="text-3xl font-bold">Welcome to LeadFlow! 👋</h1>
+              <h1 className="text-3xl font-bold">Welcome to JK Homes! 👋</h1>
               <p className="text-lg text-gray-600">
                 Let's get you set up in just a few steps. This will only take 2 minutes.
               </p>
@@ -157,11 +156,10 @@ export default function Onboarding({ onComplete }: OnboardingProps) {
                     <button
                       key={source.id}
                       onClick={() => toggleSource(source.id)}
-                      className={`p-6 border-2 rounded-lg text-center transition-all ${
-                        isSelected
+                      className={`p-6 border-2 rounded-lg text-center transition-all ${isSelected
                           ? 'border-blue-600 bg-blue-50'
                           : 'border-gray-200 hover:border-gray-300'
-                      }`}
+                        }`}
                     >
                       <Icon className={`h-8 w-8 mx-auto mb-2 ${isSelected ? 'text-blue-600' : 'text-gray-400'}`} />
                       <div className="font-semibold">{source.name}</div>
@@ -228,7 +226,7 @@ export default function Onboarding({ onComplete }: OnboardingProps) {
           {step === 5 && (
             <div className="space-y-6">
               <h2 className="text-2xl font-bold">Automation Preferences</h2>
-              <p className="text-gray-600">Configure how LeadFlow helps you work smarter</p>
+              <p className="text-gray-600">Configure how JK Homes helps you work smarter</p>
               <div className="space-y-4">
                 <div className="flex items-start justify-between p-4 border rounded-lg">
                   <div>

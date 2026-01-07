@@ -11,6 +11,8 @@ const { NotFoundError } = require('../utils/errors');
 
 // MongoDB Lead model
 const Lead = require('../models/Lead');
+const SiteVisit = require('../models/SiteVisit');
+const Activity = require('../models/Activity');
 
 // Check if MongoDB is available
 const useDatabase = () => !!process.env.MONGODB_URI;
@@ -410,9 +412,54 @@ async function updateLead(user, leadId, updateData) {
     throw new Error('Zoho update not implemented yet');
 }
 
+/**
+ * Confirm site visit
+ */
+async function confirmSiteVisit(leadId, scheduledAt, userId) {
+    // Create a new site visit
+    const visit = await SiteVisit.create({
+        lead: leadId,
+        scheduledAt,
+        confirmedBy: userId
+    });
+    return visit;
+}
+
+/**
+ * Get site visits for today
+ */
+async function getSiteVisitsForToday(userId) {
+    const start = new Date();
+    start.setHours(0,0,0,0);
+    const end = new Date();
+    end.setHours(23,59,59,999);
+    return SiteVisit.find({
+        confirmedBy: userId,
+        scheduledAt: { $gte: start, $lte: end }
+    }).populate('lead');
+}
+
+/**
+ * Create activity
+ */
+async function createActivity(activityData) {
+    return Activity.create(activityData);
+}
+
+/**
+ * Get recent activities
+ */
+async function getRecentActivities(limit = 50) {
+    return Activity.getRecent(limit);
+}
+
 module.exports = {
     getLeads,
     getLead,
     createLead,
-    updateLead
+    updateLead,
+    confirmSiteVisit,
+    getSiteVisitsForToday,
+    createActivity,
+    getRecentActivities
 };

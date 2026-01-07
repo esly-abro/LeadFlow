@@ -189,4 +189,123 @@ router.get('/sources', (req, res) => {
     });
 });
 
+/**
+ * GET /:id
+ * Get single lead details
+ */
+router.get('/:id', async (req, res, next) => {
+    try {
+        const zohoClient = require('../services/zohoClient');
+        const lead = await zohoClient.getLead(req.params.id);
+
+        if (!lead) {
+            return res.status(404).json({ success: false, error: 'Lead not found' });
+        }
+
+        // Transform to frontend format
+        const transformedLead = {
+            id: lead.id,
+            name: lead.Last_Name || lead.Full_Name || 'Unknown',
+            email: lead.Email || '',
+            phone: lead.Phone || '',
+            company: lead.Company || '',
+            source: lead.Lead_Source || '',
+            status: (lead.Lead_Status === 'New' ? 'New Lead' :
+                lead.Lead_Status === 'Interested' ? 'Engaged' :
+                    lead.Lead_Status) || 'New Lead',
+            value: 0,
+            priority: 'medium',
+            owner: lead.Owner ? {
+                id: lead.Owner.id,
+                name: lead.Owner.name
+            } : 'Unknown',
+            lastActivity: lead.Modified_Time || lead.Created_Time,
+            createdAt: lead.Created_Time,
+            // Include other fields if needed
+            street: lead.Street,
+            city: lead.City,
+            state: lead.State,
+            zipCode: lead.Zip_Code,
+            description: lead.Description
+        };
+
+        res.json({ success: true, data: transformedLead });
+    } catch (error) {
+        next(error);
+    }
+});
+
+/**
+ * PUT /:id
+ * Update lead details
+ */
+router.put('/:id', async (req, res, next) => {
+    try {
+        const zohoClient = require('../services/zohoClient');
+        const updateData = {};
+
+        // Map frontend fields to Zoho fields
+        if (req.body.name) updateData.Last_Name = req.body.name;
+        if (req.body.email) updateData.Email = req.body.email;
+        if (req.body.phone) updateData.Phone = req.body.phone;
+        if (req.body.company) updateData.Company = req.body.company;
+        if (req.body.source) updateData.Lead_Source = req.body.source;
+        if (req.body.street) updateData.Street = req.body.street;
+        if (req.body.city) updateData.City = req.body.city;
+        if (req.body.state) updateData.State = req.body.state;
+        if (req.body.zipCode) updateData.Zip_Code = req.body.zipCode;
+        if (req.body.description) updateData.Description = req.body.description;
+
+        // Handle assignment
+        if (req.body.assignedTo) {
+            // In a real scenario, you'd map this to Zoho Owner ID
+            // updateData.Owner = { id: req.body.assignedTo.id };
+        }
+
+        await zohoClient.updateLead(req.params.id, updateData);
+
+        res.json({ success: true, message: 'Lead updated successfully' });
+    } catch (error) {
+        next(error);
+    }
+});
+
+/**
+ * PATCH /:id/status
+ * Update lead status
+ */
+router.patch('/:id/status', async (req, res, next) => {
+    try {
+        const zohoClient = require('../services/zohoClient');
+        const { status } = req.body;
+
+        // Map status back to Zoho status if needed
+        // For now using direct mapping or simple switch
+        let zohoStatus = status;
+        if (status === 'New Lead') zohoStatus = 'New';
+        if (status === 'Engaged') zohoStatus = 'Interested';
+
+        await zohoClient.updateLead(req.params.id, { Lead_Status: zohoStatus });
+
+        res.json({ success: true, message: 'Status updated successfully' });
+    } catch (error) {
+        next(error);
+    }
+});
+
+/**
+ * POST /:id/site-visit
+ * Confirm site visit
+ */
+router.post('/:id/site-visit', async (req, res, next) => {
+    try {
+        const { scheduledAt } = req.body;
+        // In a real app, save this to DB or Zoho Notes/Events
+        // For now just return success
+        res.json({ success: true, message: 'Site visit scheduled' });
+    } catch (error) {
+        next(error);
+    }
+});
+
 module.exports = router;

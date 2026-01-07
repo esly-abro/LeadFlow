@@ -2,10 +2,28 @@ import { useData } from '../context/DataContext';
 import { Card, CardContent, CardHeader, CardTitle } from '../components/ui/card';
 import { Button } from '../components/ui/button';
 import { Badge } from '../components/ui/badge';
-import { Plus, Phone, Mail, FileText, Calendar as CalendarIcon, MessageSquare } from 'lucide-react';
+import { Plus, Phone, Mail, FileText, Calendar as CalendarIcon, MessageSquare, MapPin } from 'lucide-react';
 
 export default function Activities() {
-  const { activities, leads } = useData();
+  const { activities, leads, siteVisits } = useData();
+
+  // Combine activities and site visits for feed
+  const allActivities = [
+    ...activities.map(a => ({
+      ...a,
+      id: a.id || a._id,
+      description: a.description || a.title,
+      user: a.user || a.userName || 'System'
+    })),
+    ...siteVisits.map(visit => ({
+      id: visit._id,
+      type: 'site_visit',
+      leadId: visit.lead?._id || visit.lead?.id,
+      description: `Site visit scheduled with ${visit.lead?.name || 'client'} on ${new Date(visit.scheduledAt).toLocaleDateString()} at ${new Date(visit.scheduledAt).toLocaleTimeString([], { hour: '2-digit', minute: '2-digit' })}`,
+      timestamp: visit.createdAt || visit.scheduledAt,
+      user: visit.confirmedBy || 'System'
+    }))
+  ].sort((a, b) => new Date(b.timestamp).getTime() - new Date(a.timestamp).getTime());
 
   const getActivityIcon = (type: string) => {
     switch (type) {
@@ -14,7 +32,18 @@ export default function Activities() {
       case 'note': return FileText;
       case 'meeting': return CalendarIcon;
       case 'whatsapp': return MessageSquare;
+      case 'site_visit': return MapPin;
       default: return FileText;
+    }
+  };
+
+  const getActivityColor = (type: string) => {
+    switch (type) {
+      case 'call': return 'bg-green-100 text-green-600';
+      case 'email': return 'bg-blue-100 text-blue-600';
+      case 'site_visit': return 'bg-purple-100 text-purple-600';
+      case 'meeting': return 'bg-orange-100 text-orange-600';
+      default: return 'bg-gray-100 text-gray-600';
     }
   };
 
@@ -46,28 +75,36 @@ export default function Activities() {
             </CardHeader>
             <CardContent>
               <div className="space-y-6">
-                {activities.map((activity) => {
-                  const Icon = getActivityIcon(activity.type);
-                  const lead = leads.find(l => l.id === activity.leadId);
-                  
-                  return (
-                    <div key={activity.id} className="flex gap-4 items-start">
-                      <div className="w-10 h-10 bg-blue-100 rounded-full flex items-center justify-center">
-                        <Icon className="h-5 w-5 text-blue-600" />
-                      </div>
-                      <div className="flex-1">
-                        <div className="flex items-center gap-2 mb-1">
-                          <Badge>{activity.type.toUpperCase()}</Badge>
-                          <span className="font-semibold">{lead?.name}</span>
+                {allActivities.length === 0 ? (
+                  <div className="text-center py-8 text-gray-500">
+                    <FileText className="h-12 w-12 mx-auto mb-3 text-gray-300" />
+                    <p>No activities yet</p>
+                    <p className="text-sm">Schedule a site visit or add an activity to get started</p>
+                  </div>
+                ) : (
+                  allActivities.map((activity) => {
+                    const Icon = getActivityIcon(activity.type);
+                    const colorClass = getActivityColor(activity.type);
+                    const lead = leads.find(l => l.id === activity.leadId || (l as any)._id === activity.leadId);
+                    return (
+                      <div key={activity.id} className="flex gap-4 items-start">
+                        <div className={`w-10 h-10 rounded-full flex items-center justify-center ${colorClass}`}>
+                          <Icon className="h-5 w-5" />
                         </div>
-                        <p className="text-gray-700">{activity.description}</p>
-                        <div className="text-sm text-gray-500 mt-1">
-                          {activity.user} • {new Date(activity.timestamp).toLocaleString()}
+                        <div className="flex-1">
+                          <div className="flex items-center gap-2 mb-1">
+                            <Badge className={activity.type === 'site_visit' ? 'bg-purple-600' : ''}>{activity.type.toUpperCase().replace('_', ' ')}</Badge>
+                            {lead && <span className="font-semibold">{lead.name}</span>}
+                          </div>
+                          <p className="text-gray-700">{activity.description}</p>
+                          <div className="text-sm text-gray-500 mt-1">
+                            {activity.user} • {new Date(activity.timestamp).toLocaleString()}
+                          </div>
                         </div>
                       </div>
-                    </div>
-                  );
-                })}
+                    );
+                  })
+                )}
               </div>
             </CardContent>
           </Card>

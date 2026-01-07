@@ -11,6 +11,7 @@ import { Textarea } from './ui/textarea';
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from './ui/select';
 import { User, Phone, MapPin, Calendar as CalendarIcon, Clock, CheckCircle2, FileText } from 'lucide-react';
 import type { Lead } from '../context/DataContext';
+import { useData } from '../context/DataContext';
 
 interface ScheduleSiteVisitDialogProps {
     open: boolean;
@@ -20,11 +21,13 @@ interface ScheduleSiteVisitDialogProps {
 }
 
 export default function ScheduleSiteVisitDialog({ open, onOpenChange, lead, onConfirm }: ScheduleSiteVisitDialogProps) {
+    const { confirmSiteVisit } = useData();
     const [selectedDate, setSelectedDate] = useState<number | null>(null);
     const [visitDate, setVisitDate] = useState('');
     const [timeSlot, setTimeSlot] = useState('');
     const [agent, setAgent] = useState('');
     const [instructions, setInstructions] = useState('');
+    const [isSubmitting, setIsSubmitting] = useState(false);
 
     // Generate calendar days for current month with proper alignment
     const generateCalendarDays = () => {
@@ -57,13 +60,32 @@ export default function ScheduleSiteVisitDialog({ open, onOpenChange, lead, onCo
     const calendarDays = generateCalendarDays();
     const today = new Date().getDate();
 
-    const handleConfirm = () => {
-        // Handle confirmation logic here
-        console.log({ visitDate, timeSlot, agent, instructions });
-        if (onConfirm) {
-            onConfirm({ visitDate, timeSlot, agent, instructions });
+    const handleConfirm = async () => {
+        if (!visitDate || !timeSlot) {
+            alert('Please select a date and time slot');
+            return;
         }
-        onOpenChange(false);
+        
+        setIsSubmitting(true);
+        try {
+            // Combine date and time into a single timestamp
+            const scheduledAt = new Date(`${visitDate}T${timeSlot}:00`).toISOString();
+            
+            // Save to database and create activity
+            await confirmSiteVisit(lead.id, scheduledAt, lead.name);
+            
+            // Call optional callback
+            if (onConfirm) {
+                onConfirm({ visitDate, timeSlot, agent, instructions });
+            }
+            
+            onOpenChange(false);
+        } catch (error) {
+            console.error('Failed to confirm site visit:', error);
+            alert('Failed to confirm site visit. Please try again.');
+        } finally {
+            setIsSubmitting(false);
+        }
     };
 
     return (
@@ -175,10 +197,11 @@ export default function ScheduleSiteVisitDialog({ open, onOpenChange, lead, onCo
                         {/* Confirm Button */}
                         <Button
                             onClick={handleConfirm}
+                            disabled={isSubmitting || !visitDate || !timeSlot}
                             className="w-full bg-green-600 hover:bg-green-700 text-white"
                         >
                             <CheckCircle2 className="h-4 w-4 mr-2" />
-                            Confirm Site Visit
+                            {isSubmitting ? 'Confirming...' : 'Confirm Site Visit'}
                         </Button>
                     </div>
 

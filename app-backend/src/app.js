@@ -153,6 +153,14 @@ async function buildApp() {
           const token = twilioService.generateAccessToken(identity);
           return reply.send({ token, identity });
         });
+        
+        // Site Visit routes
+        protectedApp.post('/api/leads/:id/site-visit', leadsController.postSiteVisit);
+        protectedApp.get('/api/site-visits/today', leadsController.getTodaySiteVisits);
+
+        // Activity routes
+        protectedApp.post('/api/activities', leadsController.postActivity);
+        protectedApp.get('/api/activities/recent', leadsController.getRecentActivitiesHandler);
     });
 
     // Twilio voice webhook (no auth - called by Twilio)

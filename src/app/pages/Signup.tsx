@@ -48,13 +48,13 @@ export default function Signup({ onSignup }: SignupProps) {
         <div>
           <div className="flex items-center gap-2 mb-8">
             <Building2 className="h-8 w-8" />
-            <span className="text-2xl font-bold">LeadFlow</span>
+            <span className="text-2xl font-bold">JK Homes</span>
           </div>
           <h1 className="text-4xl font-bold mb-6">
             Start Your Free Trial
           </h1>
           <p className="text-xl opacity-90 mb-8">
-            Join thousands of sales teams managing their leads better with LeadFlow.
+            Join thousands of sales teams managing their leads better with JK Homes.
           </p>
         </div>
         <div className="space-y-6">

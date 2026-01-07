@@ -165,6 +165,27 @@ class ZohoClient {
     }
 
     /**
+     * Get single lead by ID
+     * @param {string} id - Lead ID
+     */
+    async getLead(id) {
+        try {
+            const endpoint = `/Leads/${id}`;
+            const response = await this.makeRequest('GET', endpoint);
+
+            if (response.data && response.data.length > 0) {
+                return response.data[0];
+            }
+            return null;
+        } catch (error) {
+            if (error.status === 404 || error.code === 'NO_DATA_FOUND') {
+                return null;
+            }
+            throw error;
+        }
+    }
+
+    /**
      * Lead Search by Email
      */
     async searchLeadsByEmail(email) {
