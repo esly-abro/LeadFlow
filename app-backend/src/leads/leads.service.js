@@ -440,6 +440,15 @@ async function getSiteVisitsForToday(userId) {
 }
 
 /**
+ * Get all site visits (for calendar)
+ */
+async function getAllSiteVisits(userId) {
+    return SiteVisit.find({
+        confirmedBy: userId
+    }).populate('lead').sort({ scheduledAt: 1 });
+}
+
+/**
  * Create activity
  */
 async function createActivity(activityData) {
@@ -460,6 +469,7 @@ module.exports = {
     updateLead,
     confirmSiteVisit,
     getSiteVisitsForToday,
+    getAllSiteVisits,
     createActivity,
     getRecentActivities
 };

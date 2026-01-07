@@ -81,6 +81,13 @@ export default function Dashboard() {
     return isToday && !isStatusUpdate && isRelevant;
   });
 
+  // Today's meetings from site visits - filter only for today's date
+  const todaysMeetings = siteVisits.filter(visit => {
+    const visitDate = new Date(visit.scheduledAt);
+    const today = new Date();
+    return visitDate.toDateString() === today.toDateString();
+  });
+
   return (
     <div className="space-y-6">
       {/* Header */}
@@ -268,18 +275,16 @@ export default function Dashboard() {
             <CardContent className="flex-1 overflow-auto custom-scrollbar">
               {todaysActivities.length > 0 ? (
                 <div className="space-y-4">
-                  {todaysActivities.map((activity) => {
-                    const lead = leads.find(l => l.id === activity.leadId);
-                    return (
-                      <div key={activity.id} className="gap-3 flex flex-col p-3 hover:bg-slate-50 rounded-md transition-colors border border-gray-100 hover:border-slate-200 shadow-sm">
-                        <div className="flex justify-between items-start">
-                          <div className="flex items-center gap-2">
-                            <span className="text-xs font-bold text-blue-600 bg-blue-50 px-2 py-0.5 rounded uppercase tracking-wide">
-                              {activity.type}
-                            </span>
-                          </div>
-                          <span className="text-xs text-gray-400 font-medium">
-                            {new Date(activity.timestamp).toLocaleTimeString([], { hour: '2-digit', minute: '2-digit' })}
+                  {todaysMeetings.map((meeting) => (
+                    <Link 
+                      key={meeting._id} 
+                      to={`/leads/${meeting.lead?._id || meeting.lead?.id}`}
+                      className="gap-3 flex flex-col p-3 hover:bg-slate-50 rounded-md transition-colors border border-gray-100 hover:border-blue-300 shadow-sm cursor-pointer block"
+                    >
+                      <div className="flex justify-between items-start">
+                        <div className="flex items-center gap-2">
+                          <span className="text-xs font-bold text-blue-600 bg-blue-50 px-2 py-0.5 rounded uppercase tracking-wide">
+                            Site Visit
                           </span>
                         </div>
 
@@ -298,8 +303,14 @@ export default function Dashboard() {
                           </div>
                         </div>
                       </div>
-                    );
-                  })}
+                      <div className="flex items-center justify-between pt-2 border-t border-gray-50 mt-1">
+                        <div className="flex items-center gap-1 text-[10px] text-gray-400">
+                          <CheckCircle2 className="h-3 w-3" />
+                          <span>{meeting.confirmedBy}</span>
+                        </div>
+                      </div>
+                    </Link>
+                  ))}
                 </div>
               ) : (
                 <div className="text-center py-12 text-gray-500 flex flex-col items-center justify-center h-full">

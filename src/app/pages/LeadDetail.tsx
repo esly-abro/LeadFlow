@@ -4,7 +4,7 @@ import { useData } from '../context/DataContext';
 import { Button } from '../components/ui/button';
 import { Card } from '../components/ui/card';
 import { Badge } from '../components/ui/badge';
-import { ArrowLeft, User, Phone, MapPin, FileText, Clock, Loader2, PhoneOff, Mic, MicOff, CheckCircle } from 'lucide-react';
+import { ArrowLeft, User, Phone, MapPin, FileText, Clock, Loader2, PhoneOff, Mic, MicOff, CheckCircle, Mail } from 'lucide-react';
 import { Textarea } from '../components/ui/textarea';
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from '../components/ui/select';
 import ScheduleSiteVisitDialog from '../components/ScheduleSiteVisitDialog';
@@ -313,8 +313,8 @@ export default function LeadDetail() {
             )}
 
             {/* Action Buttons */}
-            <div className="grid grid-cols-3 gap-4 mt-6">
-              <Button
+            <div className="grid grid-cols-4 gap-4 mt-6">
+              <Button 
                 className={isOnCall ? "bg-red-600 hover:bg-red-700 text-white" : "bg-green-600 hover:bg-green-700 text-white"}
                 onClick={handleCall}
                 disabled={isConnecting || !isReady}
@@ -347,9 +347,25 @@ export default function LeadDetail() {
                 </svg>
                 WhatsApp
               </Button>
-              <Button
-                variant="outline"
-                className="border-gray-300"
+              <Button 
+                className="bg-blue-600 hover:bg-blue-700 text-white"
+                onClick={() => {
+                  if (lead.email) {
+                    // Open Gmail compose with pre-filled recipient and subject
+                    const subject = encodeURIComponent(`Follow up - ${lead.name}`);
+                    const gmailUrl = `https://mail.google.com/mail/?view=cm&fs=1&to=${lead.email}&su=${subject}`;
+                    window.open(gmailUrl, '_blank');
+                    // Log Email activity
+                    addLeadActivity('email', 'Email Composed via Gmail', 'bg-blue-500');
+                  }
+                }}
+              >
+                <Mail className="h-4 w-4 mr-2" />
+                Email
+              </Button>
+              <Button 
+                variant="outline" 
+                className="border-gray-300" 
                 onClick={() => {
                   setDialogOpen(true);
                 }}
