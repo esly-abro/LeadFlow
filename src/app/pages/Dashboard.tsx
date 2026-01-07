@@ -63,23 +63,15 @@ export default function Dashboard() {
     { name: 'Conference', value: leads.filter(l => l.source === 'Conference').length, color: '#10b981' },
   ];
 
-  const leadsNeedingAttention = leads.filter(l => ['Not Interested', 'No Response'].includes(l.status)).slice(0, 3);
+  const leadsNeedingAttention = leads.filter(l => ['Follow-up', 'Not Interested', 'Nurture'].includes(l.status)).slice(0, 5);
 
   const teamPerformance = [
     { name: 'John Doe', active: 3, closed: 2 },
     { name: 'Jane Smith', active: 2, closed: 1 },
   ];
 
-  // Filter activities for today
-  const todaysActivities = activities.filter(activity => {
-    const activityDate = new Date(activity.timestamp);
-    const today = new Date();
-    const isToday = activityDate.toDateString() === today.toDateString();
-    const isStatusUpdate = activity.description.startsWith('Status Updated') || activity.type === 'note' || activity.type === 'status'; // generic/status types
-    const isRelevant = activity.type === 'meeting' || activity.description.toLowerCase().includes('site visit');
-
-    return isToday && !isStatusUpdate && isRelevant;
-  });
+  // Filter for "Today's Meetings" tab (High Priority Statuses)
+  const priorityLeads = leads.filter(l => ['Site Visit Scheduled', 'Negotiation'].includes(l.status));
 
   return (
     <div className="space-y-6">
@@ -266,46 +258,43 @@ export default function Dashboard() {
               </Link>
             </CardHeader>
             <CardContent className="flex-1 overflow-auto custom-scrollbar">
-              {todaysActivities.length > 0 ? (
+              {priorityLeads.length > 0 ? (
                 <div className="space-y-4">
-                  {todaysActivities.map((activity) => {
-                    const lead = leads.find(l => l.id === activity.leadId);
-                    return (
-                      <div key={activity.id} className="gap-3 flex flex-col p-3 hover:bg-slate-50 rounded-md transition-colors border border-gray-100 hover:border-slate-200 shadow-sm">
-                        <div className="flex justify-between items-start">
-                          <div className="flex items-center gap-2">
-                            <span className="text-xs font-bold text-blue-600 bg-blue-50 px-2 py-0.5 rounded uppercase tracking-wide">
-                              {activity.type}
-                            </span>
-                          </div>
-                          <span className="text-xs text-gray-400 font-medium">
-                            {new Date(activity.timestamp).toLocaleTimeString([], { hour: '2-digit', minute: '2-digit' })}
+                  {priorityLeads.map((lead) => (
+                    <div key={lead.id} className="gap-3 flex flex-col p-3 hover:bg-slate-50 rounded-md transition-colors border border-gray-100 hover:border-slate-200 shadow-sm relative overflow-hidden">
+                      <div className={`absolute left-0 top-0 bottom-0 w-1 ${lead.status === 'Negotiation' ? 'bg-purple-500' : 'bg-green-500'}`}></div>
+                      <div className="flex justify-between items-start pl-2">
+                        <div className="flex items-center gap-2">
+                          <span className={`text-[10px] font-bold px-2 py-0.5 rounded uppercase tracking-wide ${lead.status === 'Negotiation' ? 'bg-purple-100 text-purple-700' : 'bg-green-100 text-green-700'}`}>
+                            {lead.status}
                           </span>
                         </div>
+                        <span className="text-xs text-gray-400 font-medium">
+                          {lead.lastActivity ? new Date(lead.lastActivity).toLocaleDateString() : 'No activity'}
+                        </span>
+                      </div>
 
-                        <div>
-                          <p className="text-sm font-medium text-gray-900 leading-tight mb-1">{activity.description}</p>
-                          <div className="flex items-center gap-1 text-xs text-gray-500">
-                            <span>with</span>
-                            <span className="font-medium text-blue-700">{lead?.name || 'Unknown Lead'}</span>
-                          </div>
+                      <div className="pl-2">
+                        <p className="text-sm font-medium text-gray-900 leading-tight mb-1">{lead.name}</p>
+                        <div className="flex items-center gap-1 text-xs text-gray-500">
+                          <span className="truncate">{lead.company}</span>
                         </div>
-
-                        <div className="flex items-center justify-between pt-2 border-t border-gray-50 mt-1">
-                          <div className="flex items-center gap-1 text-[10px] text-gray-400">
-                            <CheckCircle2 className="h-3 w-3" />
-                            <span>{activity.user}</span>
-                          </div>
+                        <div className="flex gap-2 mt-2">
+                          <Link to={`/leads/${lead.id}`} className="w-full">
+                            <Button size="sm" variant="outline" className="w-full h-7 text-xs">View Details</Button>
+                          </Link>
                         </div>
                       </div>
-                    );
-                  })}
+                    </div>
+                  ))}
                 </div>
               ) : (
                 <div className="text-center py-12 text-gray-500 flex flex-col items-center justify-center h-full">
-                  <Calendar className="h-12 w-12 mb-3 text-gray-300" />
-                  <p>No meetings scheduled for today.</p>
-                  <Button variant="link" className="mt-2 text-blue-600">Schedule a meeting</Button>
+                  <Target className="h-12 w-12 mb-3 text-gray-300" />
+                  <p>No active site visits or negotiations.</p>
+                  <Link to="/leads">
+                    <Button variant="link" className="mt-2 text-blue-600">Find leads</Button>
+                  </Link>
                 </div>
               )}
             </CardContent>

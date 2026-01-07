@@ -42,6 +42,54 @@ const leadSchema = Joi.object({
 });
 
 /**
+ * GET /
+ * Get list of leads
+ */
+router.get('/', async (req, res, next) => {
+    try {
+        const page = parseInt(req.query.page) || 1;
+        const limit = parseInt(req.query.limit) || 20;
+
+        const zohoClient = require('../services/zohoClient');
+        const result = await zohoClient.getLeads({ page, limit });
+
+        // Transform Zoho leads to frontend format
+        const leads = result.data.map(lead => ({
+            id: lead.id,
+            name: lead.Last_Name || lead.Full_Name || 'Unknown',
+            email: lead.Email || '',
+            phone: lead.Phone || '',
+            company: lead.Company || '',
+            source: lead.Lead_Source || '',
+            status: (lead.Lead_Status === 'New' ? 'New Lead' :
+                lead.Lead_Status === 'Interested' ? 'Engaged' :
+                    lead.Lead_Status) || 'New Lead', // Map Zoho status
+            value: 0, // Default for now
+            priority: 'medium', // Default
+            owner: lead.Owner ? {
+                id: lead.Owner.id,
+                name: lead.Owner.name
+            } : 'Unknown',
+            lastActivity: lead.Modified_Time || lead.Created_Time,
+            createdAt: lead.Created_Time
+        }));
+
+        res.json({
+            data: leads,
+            pagination: {
+                page,
+                limit,
+                total: result.info.count,
+                totalPages: Math.ceil(result.info.count / limit)
+            }
+        });
+
+    } catch (error) {
+        next(error);
+    }
+});
+
+/**
  * POST /leads
  * Create or update a lead in Zoho CRM
  * 

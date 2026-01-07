@@ -49,7 +49,7 @@ app.get('/', (req, res) => {
 });
 
 // API Routes
-app.use('/leads', leadsRoutes);
+app.use('/api/leads', leadsRoutes);
 
 // 404 handler
 app.use((req, res) => {

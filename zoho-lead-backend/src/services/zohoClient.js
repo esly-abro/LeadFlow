@@ -133,9 +133,39 @@ class ZohoClient {
     }
 
     /**
-     * Search for leads by email in Zoho CRM
-     * @param {string} email - Email to search
-     * @returns {Promise<Object|null>} Lead record or null if not found
+     * Get list of leads from Zoho CRM
+     * @param {Object} params - Query parameters (page, limit)
+     * @returns {Promise<Object>} List of leads and pagination
+     */
+    async getLeads(params = {}) {
+        try {
+            const page = params.page || 1;
+            const perPage = params.limit || 20;
+            const endpoint = `/Leads?page=${page}&per_page=${perPage}`;
+
+            const response = await this.makeRequest('GET', endpoint);
+
+            if (response.data) {
+                logger.debug(`Fetched ${response.data.length} leads from Zoho`);
+                return {
+                    data: response.data,
+                    info: response.info || { count: response.data.length } // Fallback if info not provided
+                };
+            }
+
+            return { data: [], info: { count: 0, more_records: false } };
+
+        } catch (error) {
+            // Zoho returns 204 No Content for empty list sometimes, handle as empty
+            if (error.status === 204) {
+                return { data: [], info: { count: 0, more_records: false } };
+            }
+            throw error;
+        }
+    }
+
+    /**
+     * Lead Search by Email
      */
     async searchLeadsByEmail(email) {
         try {
